@@ -1,9 +1,9 @@
 ﻿using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Mechanical;
 using DesignAutomationFramework;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -12,6 +12,7 @@ namespace AEIRevitDesignAutomation
 {
     [Autodesk.Revit.Attributes.Regeneration(Autodesk.Revit.Attributes.RegenerationOption.Manual)]
     [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
+    // ReSharper disable once InconsistentNaming
     public class AEIRevitDesignAutomationApp : IExternalDBApplication
     {
         public ExternalDBApplicationResult OnStartup(ControlledApplication app)
@@ -31,48 +32,112 @@ namespace AEIRevitDesignAutomation
             {
                 var inputParamsJson = File.ReadAllText(".\\params.json");
                 var inputParams = JsonSerializer.Deserialize<InputParams>(inputParamsJson);
+                var data = e.DesignAutomationData;
 
                 var operation = inputParams?.Operation;
                 switch (operation)
                 {
-                    case "spaceNames":
-                        GetAllSpaceDisplayNames(e.DesignAutomationData);
+                    case "exteriorWallArea":
+                        ExteriorWallArea(data);
                         e.Succeeded = true;
                         break;
+
                     default:
-                        throw new InvalidOperationException($"Invalid operation specified: {operation}");
-                };
+                        ErrorOperation($"Invalid operation specified: {operation}");
+                        e.Succeeded = false;
+                        break;
+                }
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                ErrorOperation($"Exception occurred: {exception}");
                 e.Succeeded = false;
             }
         }
 
-        public static void GetAllSpaceDisplayNames(DesignAutomationData data)
+        public static void ErrorOperation(string error)
+        {
+            dynamic dResult = new ExpandoObject();
+            dResult.Error = error;
+
+            SaveResultAsJson(dResult);
+        }
+
+        public static void ExteriorWallArea(DesignAutomationData data)
         {
             _ = data ?? throw new ArgumentNullException(nameof(data));
             var doc = data.RevitDoc ?? throw new InvalidOperationException("Could not open document.");
 
-            //var rvtApp = data.RevitApp ?? throw new InvalidDataException(nameof(data.RevitApp));
-            //var modelPath = data.FilePath;
-            //if (String.IsNullOrWhiteSpace(modelPath)) throw new InvalidDataException(nameof(modelPath));
+            var exteriorWalls = GetExteriorWalls(doc);
+            var grossWallArea = exteriorWalls.Sum(GetGrossWallArea);
+            var grossWallArea2 = exteriorWalls.Sum(GetGrossWallArea2);
 
-            IEnumerable<Space> spaces = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType()
-                .OfClass(typeof(SpatialElement))
-                .OfCategory(BuiltInCategory.OST_MEPSpaces)
-                .Where(e => e.GetType() == typeof(Space) && ((Space)e).Area > 0)
-                .Cast<Space>()
-                .OrderBy(e => e.Number);
+            dynamic dResult = new ExpandoObject();
+            dResult.ExteriorWallArea = grossWallArea;
 
-            var spaceDisplayNames = spaces.Select(e => $"{e.Number} {e.Name}").ToList();
-            var json = JsonSerializer.Serialize(spaceDisplayNames, new JsonSerializerOptions { WriteIndented = true });
+            SaveResultAsJson(dResult);
+        }
+
+
+
+
+        private static void SaveResultAsJson(dynamic dResult)
+        {
+            var json = JsonSerializer.Serialize(dResult, new JsonSerializerOptions { WriteIndented = true });
 
             // ReSharper disable once StringLiteralTypo
             const string path = ".\\result.json";
             File.WriteAllText(path, json);
+        }
+
+        private static IEnumerable<Wall> GetExteriorWalls(Document doc) =>
+            new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .OfClass(typeof(Wall))
+                .Cast<Wall>()
+                .Where(o => o?.WallType.Function == WallFunction.Exterior);
+
+        public static double GetGrossWallArea(Wall wall)
+        {
+            return wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble();
+        }
+
+        public static double GetGrossWallArea2(Wall wall)
+        {
+            var wallGeometry = wall.get_Geometry(new Options());
+            Solid wallSolid = null;
+
+            foreach (var geomObject in wallGeometry)
+            {
+                // Walls and some columns will have a solid directly in its geometry
+                if (geomObject is Solid solid1 && solid1.Volume > 0D)
+                {
+                    wallSolid = solid1;
+                    break;
+                }
+
+                // You can obtain wall solid with method in the top but some other elements need this type conversion
+                if (!(geomObject is GeometryInstance geomInst)) continue;
+
+                // Instance geometry is obtained so that the intersection works as
+                // expected without requiring transformation
+                var instElem = geomInst.GetInstanceGeometry();
+
+                // There is usually only one solid but for safety, select the one with largest volume
+                var solid2 = instElem
+                    .Where(o => o is Solid)
+                    .Cast<Solid>()
+                    .Where(o => o.Volume > 0D)
+                    .OrderByDescending(o => o.Volume)
+                    .FirstOrDefault();
+
+                if (solid2 == null) continue;
+
+                wallSolid = solid2;
+                break;
+            }
+
+            return wallSolid == null ? 0D : wallSolid.Faces.Cast<Face>().Sum(face => face.Area);
         }
     }
 
