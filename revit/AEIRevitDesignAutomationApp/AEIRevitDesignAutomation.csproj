@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4B34EFEC-5F75-4EFB-80AA-4629F80D3D5B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AEIRevitDesignAutomation</RootNamespace>
+    <AssemblyName>AEIRevitDesignAutomation</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AEIRevitDesignAutomationApp.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PackageContents.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AEIRevitDesignAutomation.addin">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Autodesk.Forge.DesignAutomation.Revit">
+      <Version>2023.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Revit_All_Main_Versions_API_x64">
+      <Version>2023.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json">
+      <Version>6.0.6</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>set VER=2022
+set ADDINS_TARGET_DIR=%25ProgramData%25\Autodesk\Revit\Addins\%25VER%25
+
+echo Ensuring %25VER%25 folder exists
+if not exist "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation" mkdir "%25APPDATA%25\Autodesk\Revit\Addins\%25VER%25\AEIRevitDesignAutomation"
+
+echo Cleaning %25VER%25 folder and AEIRevitDesignAutomation.addin
+del /f /q "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\*.*"
+del /f "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation.addin"
+
+xcopy /y "$(ProjectDir)AEIRevitDesignAutomation.addin" "%25ADDINS_TARGET_DIR%25\"
+
+xcopy /y "$(TargetDir)*.*" "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\"
+
+:: xcopy /y "$(TargetPath)" "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\"
+:: xcopy /y "$(TargetDir)DesignAutomationBridge.dll" "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\"
+:: xcopy /y "$(TargetDir)System.Text.Json.dll" "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\"
+:: xcopy /y "$(TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" "%25ADDINS_TARGET_DIR%25\AEIRevitDesignAutomation\"
+</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
