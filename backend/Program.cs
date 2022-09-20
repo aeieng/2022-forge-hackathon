@@ -31,7 +31,7 @@ app.MapGet("/token", async () =>
         configuration["Forge:ClientSecret"],
         "client_credentials", new Scope[] { Scope.DataWrite, Scope.DataRead, Scope.BucketCreate, Scope.BucketRead });
 
-    return token.access_token;
+    return new Token(token.access_token, DateTime.UtcNow.AddSeconds(token.expires_in));
 });
 
 #endregion
