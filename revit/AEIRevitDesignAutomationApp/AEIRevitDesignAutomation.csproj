@@ -60,6 +60,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AEIRevitDesignAutomationApp.cs" />
+    <Compile Include="Common\Helpers.cs" />
+    <Compile Include="Models\MechanicalResponse.cs" />
+    <Compile Include="Models\ArchitecturalResponse.cs" />
+    <Compile Include="Models\InputParams.cs" />
+    <Compile Include="Operations\MechanicalOperation.cs" />
+    <Compile Include="Operations\ArchitecturalOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -81,6 +87,7 @@
       <Version>6.0.6</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>set VER=2022
