@@ -47,6 +47,11 @@ namespace AEIRevitDesignAutomation
                         e.Succeeded = true;
                         break;
 
+                    case "Electrical":
+                        ElectricalOperation.Run(data);
+                        e.Succeeded = true;
+                        break;
+
                     default:
                         ErrorOperation($"Invalid operation specified: {operation}");
                         e.Succeeded = false;

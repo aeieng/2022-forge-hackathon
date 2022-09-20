@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AEIRevitDesignAutomation.Models
+﻿namespace AEIRevitDesignAutomation.Models
 {
     internal class MechanicalResponse
     {
+        public double DuctSurfaceArea { get; set; }
     }
 }

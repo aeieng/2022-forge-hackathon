@@ -61,9 +61,11 @@
   <ItemGroup>
     <Compile Include="AEIRevitDesignAutomationApp.cs" />
     <Compile Include="Common\Helpers.cs" />
+    <Compile Include="Models\ElectricalResponse.cs" />
     <Compile Include="Models\MechanicalResponse.cs" />
     <Compile Include="Models\ArchitecturalResponse.cs" />
     <Compile Include="Models\InputParams.cs" />
+    <Compile Include="Operations\ElectricalOperation.cs" />
     <Compile Include="Operations\MechanicalOperation.cs" />
     <Compile Include="Operations\ArchitecturalOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -15,12 +15,5 @@ namespace AEIRevitDesignAutomation.Models
         public List<RoomData> Rooms { get; set; }
         public double ExteriorWallArea { get; set; }
         public double GlazingArea { get; set; }
-
-        internal ArchitecturalResponse(List<RoomData> rooms, double exteriorWallArea, double glazingArea)
-        {
-            Rooms = rooms;
-            ExteriorWallArea = exteriorWallArea;
-            GlazingArea = glazingArea;
-        }
     }
 }

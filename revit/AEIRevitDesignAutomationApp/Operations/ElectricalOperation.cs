@@ -1,35 +1,34 @@
 ﻿using AEIRevitDesignAutomation.Common;
 using AEIRevitDesignAutomation.Models;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Mechanical;
+using Autodesk.Revit.DB.Electrical;
 using DesignAutomationFramework;
 using System;
 using System.Linq;
 
 namespace AEIRevitDesignAutomation.Operations
 {
-    internal static class MechanicalOperation
+    internal static class ElectricalOperation
     {
         internal static void Run(DesignAutomationData data)
         {
             _ = data ?? throw new ArgumentNullException(nameof(data));
             var doc = data.RevitDoc ?? throw new InvalidOperationException("Could not open document.");
 
-            var ducts = new FilteredElementCollector(doc)
+            var numberOfCircuits = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
-                .OfClass(typeof(Duct))
-                .Cast<Duct>();
+                .OfClass(typeof(ElectricalSystem))
+                .Count();
 
-            var ductSurfaceArea = ducts.Select(o =>
-                {
-                    var parameters = o.ParametersMap;
-                    return parameters.Contains("Area") ? parameters.get_Item("Area").AsDouble() : 0D;
-                })
-                .Sum();
+            var numberOfLightingFixtures = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .OfClass(typeof(LightingFixture))
+                .Count();
 
-            var result = new MechanicalResponse
+            var result = new ElectricalResponse
             {
-                DuctSurfaceArea = ductSurfaceArea
+                NumberOfCircuits = numberOfCircuits,
+                NumberOfLightingFixtures = numberOfLightingFixtures
             };
 
             Helpers.SaveResultAsJson(result);
