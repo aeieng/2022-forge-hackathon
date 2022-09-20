@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Autodesk.Revit.DB.Mechanical;
 
 namespace AEIRevitDesignAutomation
 {
@@ -39,6 +40,12 @@ namespace AEIRevitDesignAutomation
                 {
                     case "exteriorWallArea":
                         ExteriorWallArea(data);
+                        e.Succeeded = true;
+                        break;
+
+                    case "ductSurfaceArea":
+                        ExteriorWallArea(data);
+                        DuctSurfaceArea(data);
                         e.Succeeded = true;
                         break;
 
@@ -78,6 +85,29 @@ namespace AEIRevitDesignAutomation
             SaveResultAsJson(dResult);
         }
 
+        public static void DuctSurfaceArea(DesignAutomationData data)
+        {
+            _ = data ?? throw new ArgumentNullException(nameof(data));
+            var doc = data.RevitDoc ?? throw new InvalidOperationException("Could not open document.");
+
+            var ducts = GetDuctsFec(doc);
+            foreach (var duct in ducts)
+            {
+                var parameters = duct.ParametersMap;
+                foreach (Parameter parameter in parameters)
+                {
+                    var name = parameter.Definition.Name;
+                    var dv = parameter.AsValueString();
+                }
+            }
+
+            dynamic dResult = new ExpandoObject();
+            // TODO
+            dResult.DuctSurfaceArea = 0D;
+
+            SaveResultAsJson(dResult);
+        }
+
 
 
 
@@ -96,6 +126,11 @@ namespace AEIRevitDesignAutomation
                 .OfClass(typeof(Wall))
                 .Cast<Wall>()
                 .Where(o => o?.WallType.Function == WallFunction.Exterior);
+
+        private static FilteredElementCollector GetDuctsFec(Document doc) =>
+            new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .OfClass(typeof(Duct));
 
         public static double GetGrossWallArea(Wall wall)
         {
