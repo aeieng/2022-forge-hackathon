@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Entities;
+using Autodesk.Forge;
+using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -19,6 +22,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGet("/", () => "Welcome to Team HackOverflow API for 2022 Forge Hackathon");
+
+#region Auth
+app.MapGet("/token", async () =>
+{
+    var token = await new TwoLeggedApi().AuthenticateAsync(
+        configuration["Forge:ClientId"],
+        configuration["Forge:ClientSecret"],
+        "client_credentials", new Scope[] { Scope.DataWrite, Scope.DataRead, Scope.BucketCreate, Scope.BucketRead });
+
+    return token.access_token;
+});
+
+#endregion
 
 #region Models
 
