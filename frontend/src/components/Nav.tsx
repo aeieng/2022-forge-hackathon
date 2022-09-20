@@ -1,34 +1,28 @@
-import { useParams } from "react-router-dom";
-import { Tabs } from "antd";
+import { useLocation } from "react-router-dom";
+import { Menu } from "antd";
 import { useNavigate } from "react-router-dom";
-import Dashboard from "./dashboard";
-import Admin from "./admin";
 
 const Nav = () => {
-  const { tabId } = useParams();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   return (
-    <Tabs
-      defaultActiveKey={tabId}
-      onChange={(activeKey) => {
-        navigate(`/${activeKey}`);
-      }}
+    <Menu
+      onClick={({ key }) => navigate(`/${key}`)}
+      selectedKeys={[pathname.split("/")[1]]}
+      mode="horizontal"
       items={[
         {
           label: "Admin",
           key: "admin",
-          children: <Admin />,
         },
         {
           label: "Inputs",
           key: "inputs",
-          children: "Inputs page",
         },
         {
           label: "Dashboard",
           key: "dashboard",
-          children: <Dashboard />,
         },
       ]}
     />
