@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "./component/Login";
-import Nav from "./component/Nav";
-import Admin from "./component/Admin";
-import Inputs from "./component/Inputs";
-import Dashboard from "./component/Dashboard";
+import Login from "./pages/Login";
+import Admin from "./pages/Admin";
+import Inputs from "./pages/Inputs";
+import Dashboard from "./pages/Dashboard";
+import Nav from "./components/Nav";
 import "./App.css";
 
 const App = () => {
