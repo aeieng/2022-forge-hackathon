@@ -1,9 +1,12 @@
 import { Button, Image } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
+
   return (
-    <div>
-      <Button>Login</Button>
+    <div style={{ textAlign: "center" }}>
+      <Button onClick={() => navigate("/admin")}>Login</Button>
       <div>
         <Image width={200} src="/building_image.png" />
         <Image width={200} src="/ui_image.png" />
