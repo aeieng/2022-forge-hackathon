@@ -46,6 +46,55 @@ app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
 #region Activities
 
 app.MapGet("/activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
+app.MapGet("/selected-activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
+app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, BackendDbContext db) =>
+{
+    foreach (var selectedActivityId in selectedActivitiesIds)
+    {
+        var selectedActivity = new SelectedActivity() { ActivityId = selectedActivityId };
+        db.SelectedActivities.Add(selectedActivity);
+    }
+    
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbContext db) =>
+{
+    if (await db.SelectedActivities.FindAsync(activityId) is not { } selectedActivity) return Results.NotFound();
+
+    db.SelectedActivities.Remove(selectedActivity);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+#endregion
+
+#region ExtractionLog
+
+app.MapGet("/extraction-log", async (BackendDbContext db) => await db.ExtractionLog.ToListAsync());
+app.MapPost("/run-activities", async (List<Guid> modelIds, BackendDbContext db) =>
+{
+    var extractionLog = new ExtractionLog()
+    {
+        Id = Guid.NewGuid(),
+    };
+
+    // Download Revit file from ACC 
+    // Use data management bucket created by Eric upload model {Guid}.rvt,  inputParams : { "Operation": "Mechanical" } Rvt Version: 2022
+    // Queue up design automation
+    // Create web hooks or poll if runing out of time
+    // Register call backs
+
+    await db.ExtractionLog.AddAsync(extractionLog);
+});
+
+#endregion
+
+#region Buildings
+
+app.MapGet("/buildings", async (BackendDbContext db) => await db.Buildings.ToListAsync());
+
 
 #endregion
 

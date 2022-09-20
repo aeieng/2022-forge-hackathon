@@ -9,6 +9,7 @@ public class Model
     public string RevitVersion { get; set; }
     public string AutodeskHubId { get; set; }
     public string AutodeskProjectId { get; set; }
+    public DateTime LastModifiedAtUtc { get; set; }
 
     public Model() { }
 
@@ -21,6 +22,7 @@ public class Model
         RevitVersion = input.RevitVersion;
         AutodeskHubId = input.AutodeskHubId;
         AutodeskProjectId = input.AutodeskProjectId;
+        LastModifiedAtUtc = input.LastModifiedAtUtc;
     }
 }
 
@@ -32,4 +34,5 @@ public class ModelInput
     public string RevitVersion { get; set; }
     public string AutodeskHubId { get; set; }
     public string AutodeskProjectId { get; set; }
+    public DateTime LastModifiedAtUtc { get; set; }
 }

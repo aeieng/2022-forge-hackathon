@@ -39,7 +39,12 @@ public class Building
     public double ElectricityEnergySourcePercentage { get; set; }
     public double OtherEnergySourceCarbonIntensity { get; set; } // kg CO2e / kWh
     public double OtherEnergySourcePercentage { get; set; }
+
     
     // Embodied
+
+    // Compute Operational Carbon
+    // Compute Embodied Carbon
+    // Compute Loads
 
 }

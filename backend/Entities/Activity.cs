@@ -8,3 +8,8 @@ public class Activity
     public string AppBundleId { get; set; }
     public ActivityType ActivityType { get; set; }
 }
+
+public class ActivityInput
+{
+    public List<Guid> ActivityIds { get; set; }
+}
