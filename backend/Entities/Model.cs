@@ -10,10 +10,17 @@ public class Model
     public string AutodeskHubId { get; set; }
     public string AutodeskProjectId { get; set; }
 
+    public Model() { }
+
     public Model(ModelInput input)
     {
         Id = Guid.NewGuid();
         AutodeskItemId = input.AutodeskItemId;
+        Name = input.Name;
+        Type = input.Type;
+        RevitVersion = input.RevitVersion;
+        AutodeskHubId = input.AutodeskHubId;
+        AutodeskProjectId = input.AutodeskProjectId;
     }
 }
 
