@@ -6,8 +6,10 @@ public class BackendDbContext : DbContext
     public BackendDbContext(DbContextOptions<BackendDbContext> options) : base(options) { }
 
     public DbSet<Model> Models { get; set; } = default!;
-    public DbSet<Space> Spaces { get; set; } = default!;
+    public DbSet<Building> Buildings { get; set; } = default!;
+    public DbSet<Room> Rooms { get; set; } = default!;
+    public DbSet<RoomType> RoomTypes { get; set; } = default!;
     public DbSet<Activity> Activities { get; set; } = default!;
-    public DbSet<JobProcessLog> JobProcessLogs { get; set; } = default!;
-    public DbSet<ModelMeta> ModelMetas { get; set; } = default!;    
+    public DbSet<ExtractionLog> ExtractionLog { get; set; } = default!;
+    public DbSet<SelectedActivity> SelectedActivities { get; set; } = default!;
 }
