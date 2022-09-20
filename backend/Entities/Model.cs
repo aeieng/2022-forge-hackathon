@@ -2,9 +2,27 @@
 
 public class Model
 {
-    public string Id { get; set; }
+    public Guid Id { get; set; }
+    public string AutodeskItemId { get; set; }
     public string Name { get; set; }
+    public ModelType Type { get; set; }
     public string RevitVersion { get; set; }
-    public string HubId { get; set; }
-    public string ProjectId { get; set; }
+    public string AutodeskHubId { get; set; }
+    public string AutodeskProjectId { get; set; }
+
+    public Model(ModelInput input)
+    {
+        Id = Guid.NewGuid();
+        AutodeskItemId = input.AutodeskItemId;
+    }
+}
+
+public class ModelInput
+{
+    public string AutodeskItemId { get; set; }
+    public string Name { get; set; }
+    public ModelType Type { get; set; }
+    public string RevitVersion { get; set; }
+    public string AutodeskHubId { get; set; }
+    public string AutodeskProjectId { get; set; }
 }
