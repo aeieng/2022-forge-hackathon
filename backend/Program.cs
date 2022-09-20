@@ -1,12 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Entities;
 using Autodesk.Forge;
-using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
@@ -60,9 +64,22 @@ app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
 #endregion
 
 #region Activities
+app.MapGet("/activity-types", () =>
+{
+    Dictionary<string, object> activityTypes = new Dictionary<string, object>();
 
+    var activityTypesList = new List<string>();
+    activityTypesList.Add("Architectural");
+    activityTypesList.Add("Structural");
+    activityTypesList.Add("Mechanical");
+    activityTypesList.Add("Electrical");
+
+    activityTypes.Add("activityTypes", activityTypesList);
+
+    return activityTypes;
+});
 app.MapGet("/activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
-app.MapGet("/selected-activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
+app.MapGet("/selected-activities", async (BackendDbContext db) => await db.SelectedActivities.ToListAsync());
 app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, BackendDbContext db) =>
 {
     foreach (var selectedActivityId in selectedActivitiesIds)
