@@ -4,7 +4,9 @@ public class ExtractionLog
 {
     public Guid Id { get; set; }
     public DateTime StartedRunAtUtc { get; set; }
-    public List<Guid> ModelIds { get; set; }
+    public Guid ModelId { get; set; }
     public string Status { get; set; }
+    public string? DesignAutomationWorkItemId { get; set; }
+    public string? DesignAutomationLog { get; set; }
 }
 
