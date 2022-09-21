@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Backend.Entities;
 
@@ -7,7 +9,7 @@ public class Model
     public Guid Id { get; set; }
     public string AutodeskItemId { get; set; }
     public string Name { get; set; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [Column(TypeName = "varchar(32)")]
     public ModelType Type { get; set; }
     public string RevitVersion { get; set; }
     public string AutodeskHubId { get; set; }
