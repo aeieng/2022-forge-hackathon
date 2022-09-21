@@ -255,9 +255,6 @@ app.MapGet("/building-program", async (Guid buildingId, BackendDbContext db) =>
 app.MapGet("/building-operational-carbon", async (Guid buildingId, BackendDbContext db) =>
     await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
 
-app.MapGet("/building-operational-carbon", async (Guid buildingId, BackendDbContext db) =>
-    await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
-
 app.MapGet("/building-materials", async (Guid buildingId, BackendDbContext db) =>
 {
     await db.Materials.FirstOrDefaultAsync(i => i.BuildingId == buildingId);
