@@ -27,12 +27,12 @@ namespace AEIRevitDesignAutomation.Operations
             var grossExteriorWallArea = exteriorWalls.Sum(GetGrossWallArea);
 
             // Get Window elements
-            var windowElementIds = exteriorWalls
+            var insertElementIds = exteriorWalls
                 .Select(o => o.FindInserts(true, false, true, true))
                 .SelectMany(o => o)
                 .ToHashSet();
 
-            var insertFamilyInstances = new FilteredElementCollector(doc, windowElementIds)
+            var insertFamilyInstances = new FilteredElementCollector(doc, insertElementIds)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(FamilyInstance))
                 .Cast<FamilyInstance>();
