@@ -1,10 +1,10 @@
 ﻿using AEIRevitDesignAutomation.Common;
 using AEIRevitDesignAutomation.Models;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Electrical;
 using DesignAutomationFramework;
 using System;
 using System.Linq;
+using Autodesk.Revit.DB.Electrical;
 
 namespace AEIRevitDesignAutomation.Operations
 {
@@ -15,14 +15,18 @@ namespace AEIRevitDesignAutomation.Operations
             _ = data ?? throw new ArgumentNullException(nameof(data));
             var doc = data.RevitDoc ?? throw new InvalidOperationException("Could not open document.");
 
-            var numberOfCircuits = new FilteredElementCollector(doc)
+            var circuits = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(ElectricalSystem))
-                .Count();
+                .OfCategory(BuiltInCategory.OST_ElectricalCircuit)
+                .ToElements();
+
+            var numberOfCircuits = circuits.Count();
 
             var numberOfLightingFixtures = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
-                .OfClass(typeof(LightingFixture))
+                .OfClass(typeof(FamilyInstance))
+                .OfCategory(BuiltInCategory.OST_LightingFixtures)
                 .Count();
 
             var result = new ElectricalResponse
