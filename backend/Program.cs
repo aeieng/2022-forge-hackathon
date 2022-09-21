@@ -10,6 +10,8 @@ using System;
 using Autodesk.Forge.Core;
 using Autodesk.Forge.DesignAutomation;
 
+#region Configs
+
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 
@@ -31,9 +33,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+#endregion
+
 app.MapGet("/", () => "Welcome to Team HackOverflow API for 2022 Forge Hackathon");
 
-#region Auth
+#region Auth Endpoints
+
 app.MapGet("/token", async () =>
 {
     var token = await new TwoLeggedApi().AuthenticateAsync(
@@ -46,7 +51,7 @@ app.MapGet("/token", async () =>
 
 #endregion
 
-#region Models
+#region Model Endpoints
 
 app.MapGet("/models", async (BackendDbContext db) => await db.Models.ToListAsync());
 app.MapPost("/add-model", async (ModelInput input, BackendDbContext db) =>
@@ -70,7 +75,8 @@ app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
 
 #endregion
 
-#region Activities
+#region Activity Endpoints
+
 app.MapGet("/activity-types", () =>
 {
     Dictionary<string, object> activityTypes = new Dictionary<string, object>();
@@ -110,104 +116,120 @@ app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbCont
 });
 #endregion
 
-#region ExtractionLog
-
-
+#region Extraction Log Endpoints
 
 app.MapGet("/extraction-log", async (BackendDbContext db) => await db.ExtractionLog.ToListAsync());
-app.MapPost("/run-activities", async (List<Guid> modelIds, BackendDbContext db) =>
+
+app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =>
 {
-    var extractionLog = new ExtractionLog()
-    {
-        Id = Guid.NewGuid(),
-    };
-
-    await db.ExtractionLog.AddAsync(extractionLog);
-
-    ForgeService service =
-                new ForgeService(
-                    new HttpClient(
-                        new ForgeHandler(Microsoft.Extensions.Options.Options.Create(new ForgeConfiguration()
-                        {
-                            ClientId = configuration["Forge:ClientId"],
-                            ClientSecret = configuration["Forge:ClientSecret"]
-                        }))
-                        {
-                            InnerHandler = new HttpClientHandler()
-                        })
-                );
-    var designAutomationClient = new DesignAutomationClient(service);
-
-    var ActivityFullName = "";
-
-    VersionsApi versionApi = new VersionsApi();
-    versionApi.Configuration.AccessToken = userAccessToken;
-    dynamic version = await versionApi.GetVersionAsync(projectId, versionId);
-    dynamic versionItem = await versionApi.GetVersionItemAsync(projectId, versionId);
-
-    string[] versionItemParams = ((string)version.data.relationships.storage.data.id).Split('/');
-    string[] bucketKeyParams = versionItemParams[versionItemParams.Length - 2].Split(':');
-    string bucketKey = bucketKeyParams[bucketKeyParams.Length - 1];
-    string objectName = versionItemParams[versionItemParams.Length - 1];
-    string downloadUrl = string.Format("https://developer.api.autodesk.com/oss/v2/buckets/{0}/objects/{1}", bucketKey, objectName);
-
     var auth = await new TwoLeggedApi().AuthenticateAsync(
         configuration["Forge:ClientId"],
         configuration["Forge:ClientSecret"],
-        "client_credentials", new Scope[] { Scope.DataWrite, Scope.DataRead, Scope.BucketCreate, Scope.BucketRead });
+        "client_credentials", new []
+        {
+            Scope.DataWrite, 
+            Scope.DataRead, 
+            Scope.BucketCreate, 
+            Scope.BucketRead
+        });
 
-    var downloadURL = new XrefTreeArgument()
+    var forgeService = 
+        new ForgeService(
+            new HttpClient(
+                new ForgeHandler(Microsoft.Extensions.Options.Options.Create(new ForgeConfiguration()
+                    {
+                        ClientId = configuration["Forge:ClientId"],
+                        ClientSecret = configuration["Forge:ClientSecret"]
+                    }))
+                    {
+                        InnerHandler = new HttpClientHandler()
+                    }));
+    
+    var designAutomationClient = new DesignAutomationClient(forgeService);
+
+    var versionApi = new VersionsApi
     {
-        Url = string.Format("https://developer.api.autodesk.com/oss/v2/buckets/{0}/objects/{1}", bucketKey, objectName),
+        Configuration =
+        {
+            AccessToken = auth.access_token
+        }
+    };
+    var version = await versionApi.GetVersionAsync("b.6f34ae9f-59a3-464a-9386-5b9a93a41484", "urn:adsk.wipprod:fs.file:vf.7KTEQgj0TMalEk_537SIpg?version=2");
+    var versionItemParams = ((string)version.data.relationships.storage.data.id).Split('/');
+    var bucketKeyParams = versionItemParams[^2].Split(':');
+    var bucketKey = bucketKeyParams[^1];
+    var objectName = versionItemParams[^1];
+
+    var downloadUrl = new XrefTreeArgument
+    {
+        Url = $"https://developer.api.autodesk.com/oss/v2/buckets/{bucketKey}/objects/{objectName}",
         Verb = Verb.Get,
-        Headers = new Dictionary<string, string>()
+        Headers = new Dictionary<string, string>
                 {
                     { "Authorization", "Bearer " + auth.access_token }
                 }
     };
 
-    string bucketName = "revitdesigncheck" + NickName.ToLower();
-    BucketsApi buckets = new BucketsApi();
-    //dynamic token = await Credentials.Get2LeggedTokenAsync(new Scope[] { Scope.BucketCreate, Scope.DataWrite });
-    buckets.Configuration.AccessToken = auth.access_token;
-    PostBucketsPayload bucketPayload = new PostBucketsPayload(bucketName, null, PostBucketsPayload.PolicyKeyEnum.Transient);
+    // TODO: pick final bucket
+    var bucketName = "arif_test";
+    BucketsApi buckets = new BucketsApi
+    {
+        Configuration =
+        {
+            AccessToken = auth.access_token
+        }
+    };
+    var bucketPayload = 
+        new PostBucketsPayload(bucketName, null, PostBucketsPayload.PolicyKeyEnum.Transient);
     try
     {
         await buckets.CreateBucketAsync(bucketPayload, "US");
     }
-    catch { }
+    catch (Exception)
+    { }
 
     ObjectsApi objects = new ObjectsApi();
-    dynamic signedUrl = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, resultFilename, new PostBucketsSigned(5), "readwrite");
+    dynamic signedUrl = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, "resultFilename", new PostBucketsSigned(5), "readwrite");
 
-    var uploadUrl = new XrefTreeArgument()
+    var uploadUrl = new XrefTreeArgument
     {
-        Url = (string)(signedUrl.Data.signedUrl),
+        Url = (string)signedUrl.Data.signedUrl,
         Verb = Verb.Put
     };
 
-    string callbackUrl = string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
+    // TODO: change to exposed callback URL
+    string callbackUrl = "https://localhost:5000/api";//string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
 
-    WorkItem workItemSpec = new WorkItem()
+    var inputParams = new XrefTreeArgument
     {
-        ActivityId = ActivityFullName,
+        Url = $"data:application/json, {{ \"Operation\" : \"{operation}\""
+    };
+
+    var workItemSpec = new WorkItem()
+    {
+        ActivityId = "CqRjmmTMt7TGXSOpPAuVuWGQYHPNwZXZ.AEIRevitDesignAutomationActivity+test",
         Arguments = new Dictionary<string, IArgument>()
         {
-            { "inputFile", await BuildDownloadURL(credentials.TokenInternal, projectId, versionId) },
-            { "result",  await BuildUploadURL(resultFilename) },
+            { "rvtFile", downloadUrl },
+            { "inputParams",  inputParams},
+            { "result",  uploadUrl },
             { "onComplete", new XrefTreeArgument { Verb = Verb.Post, Url = callbackUrl } }
         }
     };
 
-    // Download Revit file from ACC 
-    // Use data management bucket created by Eric upload model {Guid}.rvt,  inputParams : { "Operation": "Mechanical" } Rvt Version: 2022
-    // Queue up design automation
-    // Create web hooks or poll if runing out of time
-    // Register call backs
-
     WorkItemStatus workItemStatus = await designAutomationClient.CreateWorkItemAsync(workItemSpec);
-
     
+    var extractionLog = new ExtractionLog
+    {
+        Id = Guid.NewGuid(),
+        StartedRunAtUtc = DateTime.UtcNow,
+        ModelId = modelId,
+        Status = workItemStatus.Status == Status.Inprogress ? Status.Inprogress.ToString() : "Started",
+        DesignAutomationWorkItemId = workItemStatus.Id
+    };
+    
+    await db.ExtractionLog.AddAsync(extractionLog);
+    await db.SaveChangesAsync();
 });
 
 #endregion
