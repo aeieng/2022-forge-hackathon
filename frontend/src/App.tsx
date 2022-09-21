@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Col, Layout, Row } from "antd";
+import { Button, Col, Layout, Row, Space } from "antd";
 
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -21,7 +21,12 @@ const App = () => {
           </Col>
           <Col flex="auto" />
           <Col>
-            <User />
+            <Space>
+              <Button>
+                  Add Building
+              </Button>
+              <User />
+            </Space>
           </Col>
         </Row>
       </Header>
