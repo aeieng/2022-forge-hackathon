@@ -1,45 +1,71 @@
 import { useContext } from "react";
-import { Table } from "antd";
+import { Button, Table } from "antd";
 import { ModelContext } from "../pages/Admin";
+
+export type Building = {
+  id: string;
+  name: string;
+};
 
 export type Model = {
   key: string;
   title: string;
   discipline: string;
-  buildingName: string;
+  building: Building;
+  autodeskItemId: string;
+  autodeskProjectId: string;
+  autodeskHubId: string;
 };
-
-const COLUMNS = [
-  {
-    title: "Model",
-    dataIndex: "title",
-    key: "title",
-  },
-  {
-    title: "Discipline",
-    dataIndex: "discipline",
-    key: "discipline",
-  },
-  {
-    title: "Building",
-    dataIndex: "buildingName",
-    key: "buildingName",
-  },
-  {
-    title: "Revit Version",
-    dataIndex: "revitVersion",
-    key: "revitVersion",
-  },
-  {
-    title: "Actions",
-    dataIndex: "actions",
-    key: "actions",
-  },
-];
 
 const ModelTable = () => {
   const { models } = useContext(ModelContext);
-  return <Table dataSource={models} columns={COLUMNS} pagination={false} />;
+
+  const COLUMNS = [
+    {
+      title: "Model",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Discipline",
+      dataIndex: "discipline",
+      key: "discipline",
+    },
+    {
+      title: "Building",
+      dataIndex: ["building", "name"],
+      key: "buildingName",
+    },
+    {
+      title: "Revit Version",
+      dataIndex: "revitVersion",
+      key: "revitVersion",
+    },
+    {
+      title: "Actions",
+      dataIndex: "actions",
+      key: "actions",
+      // align: "center",
+      // render: (_, record) => (
+      //   <Button
+      //     onClick={() => {
+      //       setEditBuilding(record);
+      //     }}
+      //   >
+      //     Edit
+      //   </Button>
+      // ),
+    },
+  ];
+
+  return (
+    <Table
+      dataSource={models}
+      columns={COLUMNS}
+      pagination={false}
+      size="small"
+    />
+  );
 };
 
 export default ModelTable;

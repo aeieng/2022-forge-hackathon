@@ -6,20 +6,25 @@ import ModelTable, { Model } from "../components/ModelTable";
 type IModelContext = {
   models: Model[];
   setModels: Dispatch<SetStateAction<Model[]>>;
+  modelToAdd: Model | undefined;
+  setModelToAdd: Dispatch<SetStateAction<Model | undefined>>;
 };
 
 export const ModelContext = createContext<IModelContext>({
   models: [],
-  setModels: () => {
-    return;
-  },
+  setModels: () => {},
+  modelToAdd: undefined,
+  setModelToAdd: () => {},
 });
 
 const Admin = () => {
   const [models, setModels] = useState<Model[]>([]);
+  const [modelToAdd, setModelToAdd] = useState<Model>();
 
   return (
-    <ModelContext.Provider value={{ models, setModels }}>
+    <ModelContext.Provider
+      value={{ models, setModels, modelToAdd, setModelToAdd }}
+    >
       <Row gutter={16}>
         <Col span={16} />
         <Col span={8}>

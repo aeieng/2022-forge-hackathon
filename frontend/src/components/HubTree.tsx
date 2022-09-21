@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
-import { Modal, Select, Tree, TreeDataNode } from "antd";
-import { ModelContext } from "../pages/Admin";
+import { Tree, TreeDataNode } from "antd";
 import { Model } from "./ModelTable";
+import AddModelModal from "./AddModelModal";
+import { ModelContext } from "../pages/Admin";
 
 const AUTODESK_API = "https://developer.api.autodesk.com";
 
@@ -35,10 +36,9 @@ const updateTreeData = (
   });
 
 const HubTree = () => {
-  const { setModels } = useContext(ModelContext);
+  const { setModelToAdd } = useContext(ModelContext);
   const [treeData, setTreeData] = useState<TreeDataNode[]>();
   const [token, setToken] = useState<Token>();
-  const [modelToAdd, setModelToAdd] = useState<Model>();
 
   // useEffect(() => {
   //   fetch("https://developer.api.autodesk.com/authentication/v1/authenticate", {
@@ -164,59 +164,28 @@ const HubTree = () => {
       }
     });
   };
+
   return (
     <>
       <Tree
         loadData={onLoadData}
         treeData={treeData}
         height={500}
-        onSelect={(selectedKeys, info) => {
-          console.log(info);
+        onSelect={(_, info) => {
+          const [autodeskHubId, autodeskProjectId, autodeskItemId, modelId] = (
+            info.node.key as string
+          ).split("/");
+
           setModelToAdd({
-            key: info.node.key,
+            key: modelId,
             title: info.node.title,
+            autodeskItemId,
+            autodeskProjectId,
+            autodeskHubId,
           } as Model);
         }}
       />
-      <Modal
-        open={modelToAdd !== undefined}
-        onCancel={() => setModelToAdd(undefined)}
-        onOk={() => {
-          if (
-            modelToAdd !== undefined &&
-            modelToAdd.discipline &&
-            modelToAdd.buildingName
-          ) {
-            setModels((prev: Model[]) => [...prev, modelToAdd]);
-            setModelToAdd(undefined);
-          }
-        }}
-      >
-        <Select
-          options={[
-            { label: "Mechanical", value: "mechanical" },
-            { label: "Architectural", value: "architectural" },
-            { label: "Electrical", value: "electrical" },
-          ]}
-          value={modelToAdd?.discipline}
-          onSelect={(value: string) => {
-            setModelToAdd((prev) =>
-              prev !== undefined ? { ...prev, discipline: value } : prev
-            );
-          }}
-          style={{ width: "250px" }}
-        />
-        <Select
-          options={[{ label: "Building 1", value: "building1" }]}
-          value={modelToAdd?.buildingName}
-          onSelect={(value: string) => {
-            setModelToAdd((prev) =>
-              prev !== undefined ? { ...prev, buildingName: value } : prev
-            );
-          }}
-          style={{ width: "250px" }}
-        />
-      </Modal>
+      <AddModelModal />
     </>
   );
 };
