@@ -32,37 +32,47 @@ namespace AEIRevitDesignAutomation.Operations
                 .SelectMany(o => o)
                 .ToHashSet();
 
-            var windowElements = new FilteredElementCollector(doc, windowElementIds)
+            var insertFamilyInstances = new FilteredElementCollector(doc, windowElementIds)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(FamilyInstance))
-                .Where(o => o.Category.Name.IndexOf("Window", StringComparison.InvariantCultureIgnoreCase) >= 0);
+                .Cast<FamilyInstance>();
+
+            var windowFamilyInstances = insertFamilyInstances
+                .Where(o => o.Category.Name.IndexOf("window", StringComparison.InvariantCultureIgnoreCase) >= 0);
 
             // Get geometry instances from the window elements, inspect faces, and get
             // the one with largest surface area per solid, which will be the window area,
             // then sum them all.
-            var glazingArea = windowElements
-                .Select(windowElement => windowElement
+            var geoElementsPerWindow = windowFamilyInstances
+                .Select(windowFamilyInstance => windowFamilyInstance
                     .get_Geometry(new Options())
                     .Select(o => o as GeometryInstance)
                     .Where(o => o != null)
-                    .Select(o => o.GetInstanceGeometry())
+                    .Select(o => o.GetInstanceGeometry()));
+
+            var glazingArea = 0D;
+            foreach (var geoElements in geoElementsPerWindow)
+            {
+                var solids = geoElements
                     .SelectMany(o => o.Select(p => p as Solid))
-                    .Where(o => o != null && !o.Faces.IsEmpty)
-                    .Select(o => o.Faces
-                        .Cast<Face>()
-                        .OrderByDescending(p => p.Area)
-                        .FirstOrDefault()?.Area ?? 0D)
-                    .OrderByDescending(o => o)
-                    .First())
-                .Sum();
+                    .Where(o => o != null && !o.Faces.IsEmpty);
+
+                var orderedFaces = solids
+                    .SelectMany(o => o.Faces.Cast<Face>())
+                    .OrderByDescending(o => o.Area);
+
+                var largestFaceArea = orderedFaces.FirstOrDefault()?.Area ?? 0D;
+
+                glazingArea += largestFaceArea;
+            }
 
             // Get Room data
             var rooms = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
-                .OfClass(typeof(Room))
+                .OfClass(typeof(SpatialElement))
                 .OfCategory(BuiltInCategory.OST_Rooms)
+                .Where(o => o is Room room && room.Area > 0D)
                 .Cast<Room>()
-                .Where(o => o.Area > 0D)
                 .OrderBy(o => o.Number);
 
             var roomData = rooms.Select(o => new RoomData
