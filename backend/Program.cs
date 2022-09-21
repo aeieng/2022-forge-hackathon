@@ -160,7 +160,7 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
             AccessToken = auth.access_token
         }
     };
-    var version = await versionApi.GetVersionAsync("b.6f34ae9f-59a3-464a-9386-5b9a93a41484", "urn:adsk.wipprod:fs.file:vf.7KTEQgj0TMalEk_537SIpg?version=2");
+    var version = await versionApi.GetVersionAsync("b.6f34ae9f-59a3-464a-9386-5b9a93a41484", "urn:adsk.wipprod:fs.file:vf.4cfhsnE7SAKz4LXuOXyYyA?version=1");
     var versionItemParams = ((string)version.data.relationships.storage.data.id).Split('/');
     var bucketKeyParams = versionItemParams[^2].Split(':');
     var bucketKey = bucketKeyParams[^1];
