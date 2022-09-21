@@ -16,8 +16,14 @@ builder.Services.AddSwaggerGen();
 builder.Services
     .AddDbContext<BackendDbContext>
         (o => { o.UseNpgsql(configuration["ConnectionStrings:Postgres"]);});
+builder.Services.AddCors();
 
 var app = builder.Build();
+
+app.UseCors(corsPolicyBuilder => corsPolicyBuilder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
 if (app.Environment.IsDevelopment())
 {
