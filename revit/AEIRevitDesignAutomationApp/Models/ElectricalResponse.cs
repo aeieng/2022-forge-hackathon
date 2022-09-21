@@ -2,7 +2,7 @@
 {
     internal class ElectricalResponse
     {
-        public double NumberOfCircuits { get; set; }
-        public double NumberOfLightingFixtures { get; set; }
+        public int NumberOfCircuits { get; set; }
+        public int NumberOfLightingFixtures { get; set; }
     }
 }
