@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Button, Table } from "antd";
+import { Button, Table, TableColumnsType } from "antd";
 import { ModelContext } from "../pages/Admin";
 
 export type Building = {
@@ -18,9 +18,9 @@ export type Model = {
 };
 
 const ModelTable = () => {
-  const { models } = useContext(ModelContext);
+  const { models, setModelToAdd } = useContext(ModelContext);
 
-  const COLUMNS = [
+  const COLUMNS: TableColumnsType<Model> = [
     {
       title: "Model",
       dataIndex: "title",
@@ -45,16 +45,16 @@ const ModelTable = () => {
       title: "Actions",
       dataIndex: "actions",
       key: "actions",
-      // align: "center",
-      // render: (_, record) => (
-      //   <Button
-      //     onClick={() => {
-      //       setEditBuilding(record);
-      //     }}
-      //   >
-      //     Edit
-      //   </Button>
-      // ),
+      align: "center",
+      render: (_, record) => (
+        <Button
+          onClick={() => {
+            setModelToAdd(record);
+          }}
+        >
+          Edit
+        </Button>
+      ),
     },
   ];
 

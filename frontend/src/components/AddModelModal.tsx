@@ -1,4 +1,4 @@
-import { Modal, Select, Spin } from "antd";
+import { Col, Modal, Row, Select, Spin } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { ModelContext } from "../pages/Admin";
 import { Building, Model } from "./ModelTable";
@@ -78,37 +78,51 @@ const AddModelModal = () => {
       open={modelToAdd !== undefined}
       onCancel={() => setModelToAdd(undefined)}
       onOk={addModel}
+      title={modelToAdd?.title}
     >
-      <Select
-        options={[
-          { label: "Architectural", value: "architectural" },
-          { label: "Electrical", value: "electrical" },
-          { label: "Mechanical", value: "mechanical" },
-          { label: "Structural", value: "structural" },
-        ]}
-        value={modelToAdd?.discipline}
-        onSelect={(value: string) => {
-          setModelToAdd((prev) =>
-            prev !== undefined ? { ...prev, discipline: value } : prev
-          );
-        }}
-        style={{ width: "250px" }}
-      />
-      <Select
-        options={buildings.map((b: Building) => ({
-          label: b.name,
-          value: b.id,
-        }))}
-        value={modelToAdd?.building?.name}
-        onSelect={(_: string, option: { label: string; value: string }) => {
-          setModelToAdd((prev) =>
-            prev !== undefined
-              ? { ...prev, building: { id: option.value, name: option.label } }
-              : prev
-          );
-        }}
-        style={{ width: "250px" }}
-      />
+      <Row>
+        <Col span={6}>Discipline</Col>
+        <Col span={6}>
+          <Select
+            options={[
+              { label: "Architectural", value: "architectural" },
+              { label: "Electrical", value: "electrical" },
+              { label: "Mechanical", value: "mechanical" },
+              { label: "Structural", value: "structural" },
+            ]}
+            value={modelToAdd?.discipline}
+            onSelect={(value: string) => {
+              setModelToAdd((prev) =>
+                prev !== undefined ? { ...prev, discipline: value } : prev
+              );
+            }}
+            style={{ width: "250px" }}
+          />
+        </Col>
+      </Row>
+      <Row>
+        <Col span={6}>Building</Col>
+        <Col span={6}>
+          <Select
+            options={buildings.map((b: Building) => ({
+              label: b.name,
+              value: b.id,
+            }))}
+            value={modelToAdd?.building?.name}
+            onSelect={(_: string, option: { label: string; value: string }) => {
+              setModelToAdd((prev) =>
+                prev !== undefined
+                  ? {
+                      ...prev,
+                      building: { id: option.value, name: option.label },
+                    }
+                  : prev
+              );
+            }}
+            style={{ width: "250px" }}
+          />
+        </Col>
+      </Row>
     </Modal>
   );
 };

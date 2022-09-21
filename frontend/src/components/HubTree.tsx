@@ -6,7 +6,7 @@ import { ModelContext } from "../pages/Admin";
 
 const AUTODESK_API = "https://developer.api.autodesk.com";
 
-type Hub = { id: string; attributes: { name: string } };
+type Hub = { id: string; attributes: { name?: string; displayName?: string } };
 
 type Token = {
   accessToken: string;
@@ -153,7 +153,7 @@ const HubTree = () => {
                 prev ?? [],
                 key,
                 data.data.map((o: Hub) => ({
-                  title: o.attributes.name,
+                  title: o.attributes.displayName,
                   key: `${key}/${o.id}`,
                   isLeaf: true,
                 }))
