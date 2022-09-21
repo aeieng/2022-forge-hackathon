@@ -204,7 +204,8 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
 
     var extractionLogId = Guid.NewGuid();
     // TODO: change to exposed callback URL
-    string callbackUrl = $"https://localhost:5000/process-results/{extractionLogId}"; //string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
+    string hostUrl = "https://a6ad-67-161-93-69.ngrok.io";
+    string callbackUrl = $"{hostUrl}/process-results/{extractionLogId}"; //string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
 
     var inputParams = new XrefTreeArgument
     {
@@ -240,9 +241,11 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     await db.SaveChangesAsync();
 });
 
-app.MapPost("/process-results/{id}", async (Guid extractionLogId, BackendDbContext db) =>
+app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, BackendDbContext db) =>
 {
-    if (await db.ExtractionLog.FindAsync(extractionLogId) is not { } extractionLog) return Results.NotFound();
+    var extractionLog = db.ExtractionLog.FirstOrDefault(o => o.Id == extractionLogId);
+
+    if (extractionLog == default) return Results.NotFound();
 
     using var httpClient = new HttpClient();
     using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
