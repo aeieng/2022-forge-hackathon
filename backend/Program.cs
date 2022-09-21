@@ -234,10 +234,138 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
 
 #endregion
 
-#region Buildings
+#region Building Endpoints
+
+// Calculate
 
 app.MapGet("/buildings", async (BackendDbContext db) => await db.Buildings.ToListAsync());
 
+app.MapGet("/building-cost", async (Guid buildingId, BackendDbContext db) => 
+    await db.BuildingCosts.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
+
+app.MapGet("/building-program", async (Guid buildingId, BackendDbContext db) =>
+    await db.BuildingRoomTypes.Where(i => i.BuildingId == buildingId).ToListAsync());
+
+app.MapGet("/building-operational-carbon", async (Guid buildingId, BackendDbContext db) =>
+    await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
+
+app.MapGet("/building-operational-carbon", async (Guid buildingId, BackendDbContext db) =>
+    await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
+
+app.MapGet("/building-materials", async (Guid buildingId, BackendDbContext db) =>
+{
+    await db.Materials.FirstOrDefaultAsync(i => i.BuildingId == buildingId);
+});
+
+app.MapPost("/building", async (CreateBuildingInput input, BackendDbContext db) =>
+{
+    var building = new Building(input);
+    await db.Buildings.AddAsync(building);
+    await db.SaveChangesAsync();
+});
+
+app.MapPut("/building", async (Building building, BackendDbContext db ) =>
+{
+    db.Buildings.Update(building);
+    await db.SaveChangesAsync();
+});
+
+app.MapPost("/building-cost", async (BuildingCost buildingCostInput, BackendDbContext db) =>
+{
+    var buildingCost = await db.BuildingCosts.FirstOrDefaultAsync(i => i.BuildingId == buildingCostInput.BuildingId);
+    
+    if (buildingCost == default)
+    {
+        await db.BuildingCosts.AddAsync(buildingCostInput);
+    }
+    else
+    {
+        buildingCost.ArchitecturalCost = buildingCostInput.ArchitecturalCost;
+        buildingCost.StructuralCost = buildingCostInput.StructuralCost;
+        buildingCost.MechanicalCost = buildingCostInput.MechanicalCost;
+        buildingCost.ElectricalCost = buildingCostInput.ElectricalCost;
+        buildingCost.PipingCost = buildingCostInput.PipingCost;
+    }
+    
+    await db.SaveChangesAsync();
+});
+
+app.MapPost("/building-program", async (Guid buildingId, List<BuildingRoomTypeInput> buildingRoomTypesInput, BackendDbContext db) =>
+{
+    var buildingRoomTypes = db.BuildingRoomTypes.Where(i => i.BuildingId == buildingId);
+    
+    var buildingRoomTypeIds = buildingRoomTypes.Select(i => i.Id).ToHashSet();
+    foreach (var buildingRoomTypeInput in buildingRoomTypesInput)
+    {
+        if (buildingRoomTypeInput.Id.HasValue && buildingRoomTypeIds.Contains(buildingRoomTypeInput.Id.Value))
+        {
+            var buildingRoomType = await buildingRoomTypes.FirstAsync(i => i.Id == buildingRoomTypeInput.Id.Value);
+            buildingRoomType.Percentage = buildingRoomTypeInput.Percentage;
+            buildingRoomType.RoomTypeId = buildingRoomTypeInput.RoomTypeId;
+            db.BuildingRoomTypes.Update(buildingRoomType);
+        }
+        else
+        {
+            var newBuildingRoomType = new BuildingRoomType(buildingId, buildingRoomTypeInput);
+            await db.BuildingRoomTypes.AddAsync(newBuildingRoomType);
+        }
+    }
+
+    await db.SaveChangesAsync();
+});
+
+app.MapPost("/building-operational-carbon", async (BuildingOperationalCarbon input, BackendDbContext db) =>
+{
+    var buildingOperationalCarbon = await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == input.BuildingId);
+    
+    if (buildingOperationalCarbon == default)
+    {
+        await db.BuildingOperationalCarbons.AddAsync(input);
+    }
+    else
+    {
+        buildingOperationalCarbon.ElectricityCarbonIntensity = input.ElectricityCarbonIntensity;
+        buildingOperationalCarbon.ElectricityEnergySourcePercentage = input.ElectricityEnergySourcePercentage;
+        buildingOperationalCarbon.NaturalGasCarbonIntensity = input.NaturalGasCarbonIntensity;
+        buildingOperationalCarbon.NaturalGasEnergySourcePercentage = input.NaturalGasEnergySourcePercentage;
+        buildingOperationalCarbon.OtherEnergySourceCarbonIntensity = input.OtherEnergySourceCarbonIntensity;
+        buildingOperationalCarbon.OtherEnergySourcePercentage = input.OtherEnergySourcePercentage;
+    }
+    
+    await db.SaveChangesAsync();
+
+});
+
+app.MapPost("/building-materials", async (Guid buildingId, List<MaterialInput> inputs, BackendDbContext db) =>
+{
+    var materials = db.Materials.Where(i => i.BuildingId == buildingId);
+
+    var materialIds = materials.Select(i => i.Id).ToHashSet();
+    foreach (var input in inputs)
+    {
+        if (input.Id.HasValue && materialIds.Contains(input.Id.Value))
+        {
+            var material = await materials.FirstAsync(i => i.Id == input.Id.Value);
+            material.Category = input.Category;
+            material.SubCategory = input.SubCategory;
+            material.Name = input.Name;
+            material.Quantity = input.Quantity;
+            material.Unit = input.Unit;
+            material.BaselineEpd = input.BaselineEpd;
+            material.AchievableEpd = input.AchievableEpd;
+            material.RealizedEpd = input.RealizedEpd;
+
+            db.Materials.Update(material);
+        }
+        else
+        {
+            var newMaterial = new Material(buildingId, input);
+            await db.Materials.AddAsync(newMaterial);
+        }
+    }
+
+    await db.SaveChangesAsync();
+});
 
 #endregion
 
