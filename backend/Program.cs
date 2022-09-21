@@ -1,14 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Backend.Entities;
 using Autodesk.Forge;
-using Microsoft.AspNetCore.Http.Json;
-using System.Text.Json.Serialization;
-using Autodesk.Forge.DesignAutomation.Model;
-using System.Net;
-using Autodesk.Forge.Model;
-using System;
 using Autodesk.Forge.Core;
 using Autodesk.Forge.DesignAutomation;
+using Autodesk.Forge.DesignAutomation.Model;
+using Autodesk.Forge.Model;
+using Backend.Entities;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 #region Configs
 
@@ -195,16 +193,18 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     { }
 
     ObjectsApi objects = new ObjectsApi();
-    dynamic signedUrl = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, "resultFilename", new PostBucketsSigned(5), "readwrite");
+    dynamic signedUrlResponse = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, "result.json", new PostBucketsSigned(60), "readwrite");
+    var signedUrl = (string)signedUrlResponse.Data.signedUrl;
 
     var uploadUrl = new XrefTreeArgument
     {
-        Url = (string)signedUrl.Data.signedUrl,
+        Url = signedUrl,
         Verb = Verb.Put
     };
 
+    var extractionLogId = Guid.NewGuid();
     // TODO: change to exposed callback URL
-    string callbackUrl = "https://localhost:5000/api";//string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
+    string callbackUrl = $"https://localhost:5000/process-results/{extractionLogId}"; //string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
 
     var inputParams = new XrefTreeArgument
     {
@@ -227,15 +227,31 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     
     var extractionLog = new ExtractionLog
     {
-        Id = Guid.NewGuid(),
+        Id = extractionLogId,
         StartedRunAtUtc = DateTime.UtcNow,
         ModelId = modelId,
+        Operation = operation,
+        ResultSignedUrl = signedUrl,
         Status = workItemStatus.Status == Status.Inprogress ? Status.Inprogress.ToString() : "Started",
         DesignAutomationWorkItemId = workItemStatus.Id
     };
     
     await db.ExtractionLog.AddAsync(extractionLog);
     await db.SaveChangesAsync();
+});
+
+app.MapPost("/process-results/{id}", async (Guid extractionLogId, BackendDbContext db) =>
+{
+    if (await db.ExtractionLog.FindAsync(extractionLogId) is not { } extractionLog) return Results.NotFound();
+
+    using var httpClient = new HttpClient();
+    using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
+    httpResponse.EnsureSuccessStatusCode();
+    var resultJson = httpResponse.Content.ReadAsStringAsync();
+
+    // switch extractionLog.Operation
+
+    return Results.Ok();
 });
 
 #endregion
