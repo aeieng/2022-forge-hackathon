@@ -6,7 +6,20 @@ import { AppContext } from "../context/AppContext";
 
 const AUTODESK_API = "https://developer.api.autodesk.com";
 
-type Hub = { id: string; attributes: { name?: string; displayName?: string } };
+type Hub = {
+  id: string;
+  attributes: { name?: string; displayName?: string; hidden?: boolean };
+};
+
+const hiddenFolderFilterCallback = (o: Hub) => {
+  const notIncludedFolders = ["submittal", "checklist", "dailylog", "issue"];
+  return (
+    !o.attributes.hidden &&
+    !o.attributes.name?.startsWith(
+      notIncludedFolders.filter((s) => o.attributes.name?.startsWith(s))[0]
+    )
+  );
+};
 
 // It's just a simple demo. You can use tree map to optimize update perf.
 const updateTreeData = (
@@ -98,7 +111,7 @@ const HubTree = () => {
               updateTreeData(
                 prev ?? [],
                 key,
-                data.data.map((o: Hub) => ({
+                data.data.filter(hiddenFolderFilterCallback).map((o: Hub) => ({
                   title: o.attributes.name,
                   key: `${key}/${o.id}`,
                   selectable: false,
