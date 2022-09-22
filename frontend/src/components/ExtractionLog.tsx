@@ -1,6 +1,7 @@
 import { Table, TableColumnsType } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { StopOutlined } from "@ant-design/icons";
+import { AppContext } from "../context/AppContext";
 
 type ExtractionLogType = {
   id: string;
@@ -27,41 +28,29 @@ const COLUMNS: TableColumnsType<ExtractionLogType> = [
 ];
 
 const ExtractionLog = () => {
+  const { token } = useContext(AppContext);
   const [extractionLog, setExtractionLog] = useState<ExtractionLogType[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("https://localhost:5001/token")
+    fetch(`https://localhost:5001/extraction-log`, {
+      method: "GET",
+      headers: new Headers({
+        Authorization: `Bearer ${token.accessToken}`,
+      }),
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();
         }
         throw response;
       })
-      .then((token) => {
-        fetch(`https://localhost:5001/extraction-log`, {
-          method: "GET",
-          headers: new Headers({
-            Authorization: `Bearer ${token.accessToken}`,
-          }),
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw response;
-          })
-          .then((data) => {
-            console.log(data);
-            setExtractionLog(data);
-          })
-          .catch((error) => {
-            console.error(error);
-            alert("Error deleting.");
-          });
+      .then((data) => {
+        setExtractionLog(data);
       })
       .catch((error) => {
         console.error(error);
+        alert("Error deleting.");
       })
       .finally(() => {
         setLoading(false);
@@ -75,6 +64,7 @@ const ExtractionLog = () => {
       columns={COLUMNS}
       pagination={false}
       size="small"
+      rowKey="id"
     />
   );
 };

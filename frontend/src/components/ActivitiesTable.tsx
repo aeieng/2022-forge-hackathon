@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Table, TableColumnsType } from "antd";
+import { AppContext } from "../context/AppContext";
 
 export type Activity = {
   id: string;
@@ -16,46 +17,34 @@ const COLUMNS: TableColumnsType<Activity> = [
 ];
 
 const ActivitiesTable = () => {
+  const { token } = useContext(AppContext);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("https://localhost:5001/token")
+    fetch(`https://localhost:5001/activities`, {
+      method: "GET",
+      headers: new Headers({
+        Authorization: `Bearer ${token.accessToken}`,
+      }),
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();
         }
         throw response;
       })
-      .then((token) => {
-        fetch(`https://localhost:5001/activities`, {
-          method: "GET",
-          headers: new Headers({
-            Authorization: `Bearer ${token.accessToken}`,
-          }),
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw response;
-          })
-          .then((data) => {
-            console.log(data);
-            setActivities(data);
-          })
-          .catch((error) => {
-            console.error(error);
-            alert("Error deleting.");
-          });
+      .then((data) => {
+        setActivities(data);
       })
       .catch((error) => {
         console.error(error);
+        alert("Error deleting.");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [token]);
 
   return (
     <Table
@@ -64,6 +53,7 @@ const ActivitiesTable = () => {
       columns={COLUMNS}
       pagination={false}
       size="small"
+      rowKey="id"
     />
   );
 };

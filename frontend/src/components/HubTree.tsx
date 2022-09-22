@@ -3,15 +3,11 @@ import { Tree, TreeDataNode } from "antd";
 import { Model } from "./ModelTable";
 import AddModelModal from "./AddModelModal";
 import { ModelContext } from "../context/ModelContext";
+import { AppContext } from "../context/AppContext";
 
 const AUTODESK_API = "https://developer.api.autodesk.com";
 
 type Hub = { id: string; attributes: { name?: string; displayName?: string } };
-
-type Token = {
-  accessToken: string;
-  expiresAt: string;
-};
 
 // It's just a simple demo. You can use tree map to optimize update perf.
 const updateTreeData = (
@@ -36,45 +32,22 @@ const updateTreeData = (
   });
 
 const HubTree = () => {
+  const { token } = useContext(AppContext);
   const { setModelToAdd } = useContext(ModelContext);
   const [treeData, setTreeData] = useState<TreeDataNode[]>();
-  const [token, setToken] = useState<Token>();
+  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   fetch("https://developer.api.autodesk.com/authentication/v1/authenticate", {
-  //     method: "POST",
-  //     mode: "cors",
-  //     headers: new Headers({
-  //       "content-type": "application/x-www-form-urlencoded",
-  //       client_id: "CqRjmmTMt7TGXSOpPAuVuWGQYHPNwZXZ",
-  //       client_secret: "VHBoZ9SNRdG6ZLh4",
-  //       grant_type: "client_credentials",
-  //       scope: "data:write data:read bucket:create bucket:delete",
-  //       // "Access-Control-Allow-Origin": "http://127.0.0.1:3000",
-  //     }),
-  //     // body: JSON.stringify({
-  //     // }),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => console.log(data));
-  // });
+  const options = {
+    method: "GET",
+    headers: new Headers({
+      Authorization: `Bearer ${token.accessToken}`,
+    }),
+  };
 
   useEffect(() => {
-    if (!token) {
-      fetch("https://localhost:5001/token")
-        .then((response) => response.json())
-        .then((data) => setToken(data));
-    }
-  });
-
-  useEffect(() => {
-    if (token && !treeData) {
-      fetch(`${AUTODESK_API}/project/v1/hubs`, {
-        method: "GET",
-        headers: new Headers({
-          Authorization: `Bearer ${token.accessToken}`,
-        }),
-      })
+    if (token.accessToken && !loading && !treeData) {
+      setLoading(true);
+      fetch(`${AUTODESK_API}/project/v1/hubs`, options)
         .then((response) => response.json())
         .then((data) => {
           setTreeData(
@@ -84,7 +57,8 @@ const HubTree = () => {
               selectable: false,
             }))
           );
-        });
+        })
+        .finally(() => setLoading(false));
     }
   }, [token]);
 
@@ -94,12 +68,6 @@ const HubTree = () => {
         resolve();
         return;
       }
-      const options = {
-        method: "GET",
-        headers: new Headers({
-          Authorization: `Bearer ${token?.accessToken}`,
-        }),
-      };
       const keys = key.split("/");
       if (keys.length === 1) {
         // User opening a Hub in tree. Get Projects for this Hub.
@@ -177,12 +145,15 @@ const HubTree = () => {
           ).split("/");
 
           setModelToAdd({
-            key: modelId,
-            title: info.node.title,
+            id: modelId,
+            name: (info.node.title as string) ?? "none",
             autodeskItemId,
             autodeskProjectId,
             autodeskHubId,
-          } as Model);
+            revitVersion: "",
+            buildingId: "",
+            type: "",
+          });
         }}
       />
       <AddModelModal />

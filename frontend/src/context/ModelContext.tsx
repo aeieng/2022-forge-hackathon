@@ -5,9 +5,11 @@ import {
   useState,
   PropsWithChildren,
   useEffect,
+  useContext,
 } from "react";
 import { Model } from "../components/ModelTable";
 import { ModelResponse } from "../query/Model";
+import { AppContext } from "./AppContext";
 
 type Context = {
   models: Model[];
@@ -24,54 +26,40 @@ export const ModelContext = createContext<Context>({
 });
 
 export const ModelContextProvider = ({ children }: PropsWithChildren) => {
+  const { token } = useContext(AppContext);
   const [models, setModels] = useState<Model[]>([]);
   const [modelToAdd, setModelToAdd] = useState<Model>();
 
   useEffect(() => {
-    fetch("https://localhost:5001/token")
+    fetch("https://localhost:5001/models", {
+      method: "GET",
+      headers: new Headers({
+        Authorization: `Bearer ${token.accessToken}`,
+        "Content-Type": "application/json",
+      }),
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();
         }
         throw response;
       })
-      .then((token) => {
-        fetch("https://localhost:5001/models", {
-          method: "GET",
-          headers: new Headers({
-            Authorization: `Bearer ${token.accessToken}`,
-            "Content-Type": "application/json",
-          }),
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw response;
+      .then((data: ModelResponse[]) => {
+        setModels((prev) =>
+          data.map((model: ModelResponse) => {
+            const m: Model = {
+              id: model.id,
+              name: model.name,
+              buildingId: model.buildingId,
+              type: model.type,
+              autodeskItemId: model.autodeskItemId,
+              autodeskProjectId: model.autodeskProjectId,
+              autodeskHubId: model.autodeskHubId,
+              revitVersion: "",
+            };
+            return m;
           })
-          .then((data: ModelResponse[]) => {
-            console.log(data);
-            setModels((prev) =>
-              data.map((model: ModelResponse) => {
-                const m: Model = {
-                  key: model.id,
-                  title: model.name,
-                  building: {
-                    id: model.buildingId,
-                    name: model.buildingId,
-                  },
-                  discipline: model.type,
-                  autodeskItemId: model.autodeskItemId,
-                  autodeskProjectId: model.autodeskProjectId,
-                  autodeskHubId: model.autodeskHubId,
-                };
-                return m;
-              })
-            );
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+        );
       })
       .catch((error) => {
         console.error(error);
