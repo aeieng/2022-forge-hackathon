@@ -14,6 +14,7 @@ public class Model
     public string RevitVersion { get; set; }
     public string AutodeskHubId { get; set; }
     public string AutodeskProjectId { get; set; }
+    public string DerivativeId { get; set; }
     [ForeignKey("Building")]
     public Guid BuildingId { get; set; }
     public ModelData ModelData { get; set; }
@@ -28,7 +29,8 @@ public class Model
         BuildingId = input.BuildingId;
         AutodeskItemId = input.AutodeskItemId;
         AutodeskProjectId = input.AutodeskProjectId;
-        AutodeskHubId = input.AutodeskHubId;        
+        AutodeskHubId = input.AutodeskHubId;
+        DerivativeId = input.DerivativeId;
         Name = input.Name;
         Type = input.Type;
         RevitVersion = input.RevitVersion;
@@ -40,6 +42,7 @@ public class ModelInput
     public string AutodeskItemId { get; set; }
     public string AutodeskProjectId { get; set; }
     public string AutodeskHubId { get; set; }
+    public string DerivativeId { get; set; }
     public Guid BuildingId { get; set; }
     public string Name { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
