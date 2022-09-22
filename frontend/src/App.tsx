@@ -22,9 +22,7 @@ const App = () => {
           <Col flex="auto" />
           <Col>
             <Space>
-              <Button>
-                  Add Building
-              </Button>
+              <Button>Add Building</Button>
               <User />
             </Space>
           </Col>

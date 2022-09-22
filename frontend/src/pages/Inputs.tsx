@@ -1,48 +1,48 @@
-import { useState } from "react";
-import { Select } from "antd";
+import { useState, useEffect } from "react";
+import { Select, Space } from "antd";
+import { BuildingTabs } from "../components/BuildingTabs";
 
-const MOCK_BENCHMARK_BUILDINGS = [
-  {
-    benchmarkProjectId: 'MOCK_BENCHMARK_PROJECT_ID_1',
-    benchmarkBuildingId: 'MOCK_BENCHMARK_BUILDING_ID_1',
-    name: 'BUILDING_1'
-  },
-  {
-    benchmarkProjectId: 'MOCK_BENCHMARK_PROJECT_ID_1',
-    benchmarkBuildingId: 'MOCK_BENCHMARK_BUILDING_ID_2',
-    name: 'BUILDING_2'
-  },
-  {
-    benchmarkProjectId: 'MOCK_BENCHMARK_PROJECT_ID_1',
-    benchmarkBuildingId: 'MOCK_BENCHMARK_BUILDING_ID_3',
-    name: 'BUILDING_3'
-  },
-  {
-    benchmarkProjectId: 'MOCK_BENCHMARK_PROJECT_ID_1',
-    benchmarkBuildingId: 'MOCK_BENCHMARK_BUILDING_ID_4',
-    name: 'BUILDING_4'
-  }
-];
-
+interface Building {
+  id: string,
+  name: string
+}
 
 const Inputs = () => {
+  const [buildings, setBuildings] = useState<Building[]>([]);
+  const [buildingsLoading, setBuildingsLoading] = useState(true);
+  const [tabKey, setTabKey] = useState("general-information");
+  const [buildingId, setBuildingId] = useState<string | null>(null);
 
-  const [buildingId, setBuildingId] = useState();
+  useEffect(() => {
+    fetch("https://localhost:5001/buildings")
+      .then((response) => response.json())
+      .then((data) => setBuildings(data))
+      .finally(() => setBuildingsLoading(false));
+  }, []);
 
-  return <>
-  <Select
-  value={buildingId}
-  onChange={(_, option) => {
-    //setBuildingId(option.key);
-  }}
-  style={{ alignSelf: 'end', width: '300px' }}
->
-{MOCK_BENCHMARK_BUILDINGS.map((bb) => (
-        <Select.Option key={bb.benchmarkBuildingId} value={bb.benchmarkBuildingId}>
-          {bb.name}
-        </Select.Option>
-      ))}
-</Select></>;
+  return (
+    <Space direction="vertical" size="middle" style={{ display: "flex" }}>
+      <Select
+        value={buildingId}
+        loading={buildingsLoading}
+        onChange={(_, option) => {
+          setBuildingId(option.value);
+        }}
+        style={{ alignSelf: "end", width: "300px" }}
+      >
+        {buildings.map((b) => (
+          <Select.Option key={b.id} value={b.id}>
+            {b.name}
+          </Select.Option>
+        ))}
+      </Select>
+      {buildingId ? (
+        <BuildingTabs tabKey={tabKey} setTabKey={setTabKey} buildingId={buildingId} />
+      ) : (
+        <>Select a Building </>
+      )}
+    </Space>
+  );
 };
 
 export default Inputs;

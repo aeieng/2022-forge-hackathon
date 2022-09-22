@@ -1,10 +1,13 @@
 import { Layout } from "antd";
 
 const BuildingEmbodiedCarbon = () => {
+
   return (
     <Layout.Content>
       <Layout style={{ background: '#fff', padding: '10px' }}>
-        <div>Program</div>    
+      
+        <div>Embodied Carbon</div> 
+        
       </Layout>
     </Layout.Content>
   );

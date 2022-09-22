@@ -244,6 +244,11 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
 
 // Calculate
 
+app.MapGet("/building", async (Guid buildingId, BackendDbContext db) =>
+{
+    return await db.Buildings.FirstOrDefaultAsync(i => i.Id == buildingId);
+});
+
 app.MapGet("/buildings", async (BackendDbContext db) => await db.Buildings.ToListAsync());
 
 app.MapGet("/building-cost", async (Guid buildingId, BackendDbContext db) => 
@@ -295,25 +300,11 @@ app.MapPost("/building-cost", async (BuildingCost buildingCostInput, BackendDbCo
 
 app.MapPost("/building-program", async (Guid buildingId, List<BuildingRoomTypeInput> buildingRoomTypesInput, BackendDbContext db) =>
 {
-    var buildingRoomTypes = db.BuildingRoomTypes.Where(i => i.BuildingId == buildingId);
-    
-    var buildingRoomTypeIds = buildingRoomTypes.Select(i => i.Id).ToHashSet();
-    foreach (var buildingRoomTypeInput in buildingRoomTypesInput)
-    {
-        if (buildingRoomTypeInput.Id.HasValue && buildingRoomTypeIds.Contains(buildingRoomTypeInput.Id.Value))
-        {
-            var buildingRoomType = await buildingRoomTypes.FirstAsync(i => i.Id == buildingRoomTypeInput.Id.Value);
-            buildingRoomType.Percentage = buildingRoomTypeInput.Percentage;
-            buildingRoomType.RoomTypeId = buildingRoomTypeInput.RoomTypeId;
-            db.BuildingRoomTypes.Update(buildingRoomType);
-        }
-        else
-        {
-            var newBuildingRoomType = new BuildingRoomType(buildingId, buildingRoomTypeInput);
-            await db.BuildingRoomTypes.AddAsync(newBuildingRoomType);
-        }
-    }
+    var existing = db.BuildingRoomTypes.Where(i => i.BuildingId == buildingId);
+    db.BuildingRoomTypes.RemoveRange(existing);
 
+    var buildingRoomTypes = buildingRoomTypesInput.Select(input => new BuildingRoomType(buildingId, input)).ToList();
+    await db.BuildingRoomTypes.AddRangeAsync(buildingRoomTypes);
     await db.SaveChangesAsync();
 });
 
