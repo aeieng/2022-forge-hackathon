@@ -16,7 +16,7 @@ const App = () => {
     <Layout style={{ height: "100%" }}>
       <Header>
         <Row gutter={16}>
-          <Col>
+          <Col span={16}>
             <Nav />
           </Col>
           <Col flex="auto" />
@@ -38,7 +38,7 @@ const App = () => {
           </Route>
         </Routes>
       </Content>
-      <Footer style={{ textAlign: "center" }}>AEI 2022</Footer>
+      <Footer style={{ textAlign: "center" }}>2022 Affiliated Engineers, Inc.</Footer>
     </Layout>
   );
 };

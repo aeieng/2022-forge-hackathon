@@ -5,23 +5,27 @@ import { v4 as uuidv4 } from 'uuid';
 
 const BuildingProgram:React.FC<{buildingId: string}> = ({buildingId}) => {
   const [loading, setLoading] = useState(true);
-  const [buildingInfo, setBuildingInfo] = useState()
+  const [buildingInfo, setBuildingInfo] = useState({})
 
   useEffect(() => {
     setLoading(true)
     fetch(`https://localhost:5001/building-program?buildingId=${buildingId}`)
       .then((response) => response.json())
-      .then((data) => setBuildingInfo(data))
+      .then((data) => setBuildingInfo({roomTypes: data}))
       .finally(() => setLoading(false));
   }, [buildingId]);
 
   const onFinish = (values: any) => {
-    console.log(values);
+    fetch(`https://localhost:5001/building-program?buildingId=${buildingId}`, {
+      method: 'POST',
+      headers: new Headers({
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify(values.roomTypes)
+    })
   };
 
   if(loading) return <>loading...</>
-
-  console.log(buildingInfo)
 
   return (
     <Layout.Content>
@@ -31,6 +35,7 @@ const BuildingProgram:React.FC<{buildingId: string}> = ({buildingId}) => {
           onFinish={onFinish}
           autoComplete="off"
           layout="horizontal"
+          initialValues={buildingInfo}
         >
           <Form.List name="roomTypes">
             {(fields, { add, remove }) => (

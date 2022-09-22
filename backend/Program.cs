@@ -260,10 +260,8 @@ app.MapGet("/building-program", async (Guid buildingId, BackendDbContext db) =>
 app.MapGet("/building-operational-carbon", async (Guid buildingId, BackendDbContext db) =>
     await db.BuildingOperationalCarbons.FirstOrDefaultAsync(i => i.BuildingId == buildingId));
 
-app.MapGet("/building-materials", async (Guid buildingId, BackendDbContext db) =>
-{
-    await db.Materials.FirstOrDefaultAsync(i => i.BuildingId == buildingId);
-});
+app.MapGet("/building-materials", async (Guid buildingId, BackendDbContext db) => 
+    await db.Materials.Where(i => i.BuildingId == buildingId).ToListAsync());
 
 app.MapPost("/building", async (CreateBuildingInput input, BackendDbContext db) =>
 {
@@ -306,6 +304,13 @@ app.MapPost("/building-program", async (Guid buildingId, List<BuildingRoomTypeIn
     var buildingRoomTypes = buildingRoomTypesInput.Select(input => new BuildingRoomType(buildingId, input)).ToList();
     await db.BuildingRoomTypes.AddRangeAsync(buildingRoomTypes);
     await db.SaveChangesAsync();
+
+    var building = await db.Buildings.FirstOrDefaultAsync(i => i.Id == buildingId);
+    if (building != default)
+    {
+        building.CalculateLoad(buildingRoomTypes);
+        await db.SaveChangesAsync();
+    }
 });
 
 app.MapPost("/building-operational-carbon", async (BuildingOperationalCarbon input, BackendDbContext db) =>
@@ -332,8 +337,14 @@ app.MapPost("/building-operational-carbon", async (BuildingOperationalCarbon inp
 
 app.MapPost("/building-materials", async (Guid buildingId, List<MaterialInput> inputs, BackendDbContext db) =>
 {
-    var materials = db.Materials.Where(i => i.BuildingId == buildingId);
-
+    var existing = db.Materials.Where(i => i.BuildingId == buildingId);
+    db.Materials.RemoveRange(existing);
+    
+    var materials = inputs.Select(input => new Material(buildingId, input)).ToList();
+    await db.Materials.AddRangeAsync(materials);
+    await db.SaveChangesAsync();
+    
+    /*
     var materialIds = materials.Select(i => i.Id).ToHashSet();
     foreach (var input in inputs)
     {
@@ -358,7 +369,7 @@ app.MapPost("/building-materials", async (Guid buildingId, List<MaterialInput> i
         }
     }
 
-    await db.SaveChangesAsync();
+    await db.SaveChangesAsync();*/
 });
 
 #endregion

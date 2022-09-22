@@ -36,8 +36,8 @@ public class BuildingRoomTypeInput
 {
     public Guid Id { get; set; }
     public string RoomTypeName { get; set; }
-    public double Percentage { get; set; }
-    public double PeopleDensity { get; set; }
-    public double LightingDensity { get; set; }
-    public double EquipmentDensity { get; set; }
+    public int Percentage { get; set; }
+    public int PeopleDensity { get; set; }
+    public int LightingDensity { get; set; }
+    public int EquipmentDensity { get; set; }
 }

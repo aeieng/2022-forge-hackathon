@@ -10,21 +10,26 @@ interface TabProps {
   setTabKey: React.Dispatch<React.SetStateAction<string>>;
 }
 
-
-
-export const BuildingTabs: React.FC<TabProps> = ({ tabKey, setTabKey, buildingId }) => {
-
+export const BuildingTabs: React.FC<TabProps> = ({
+  tabKey,
+  setTabKey,
+  buildingId,
+}) => {
   const items = [
     {
       label: "General Information",
       key: "general-information",
       children: <BuildingGeneral buildingId={buildingId} />,
     },
-    { label: "Program", key: "program", children: <BuildingProgram buildingId={buildingId} /> },
+    {
+      label: "Program",
+      key: "program",
+      children: <BuildingProgram buildingId={buildingId} />,
+    },
     {
       label: "Embodied Carbon",
       key: "embodied-carbon",
-      children: <BuildingEmbodiedCarbon />,
+      children: <BuildingEmbodiedCarbon buildingId={buildingId} />,
     },
   ];
 
