@@ -66,20 +66,21 @@ export const ModelContextProvider = ({ children }: PropsWithChildren) => {
         throw response;
       })
       .then((data: ModelResponse[]) => {
-        setModels((prev) =>
-          data.map((model: ModelResponse) => {
-            const m: Model = {
+        setModels(
+          data.map(
+            (model: ModelResponse): Model => ({
               id: model.id,
               name: model.name,
               buildingId: model.buildingId,
+              // Building name not provided, using id for now.
+              buildingName: model.buildingId,
               type: model.type,
               autodeskItemId: model.autodeskItemId,
               autodeskProjectId: model.autodeskProjectId,
               autodeskHubId: model.autodeskHubId,
               revitVersion: "",
-            };
-            return m;
-          })
+            })
+          )
         );
       })
       .catch((error) => {
