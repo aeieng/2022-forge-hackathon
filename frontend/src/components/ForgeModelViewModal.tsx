@@ -20,19 +20,12 @@ class ForgeModelViewModal extends Component<ForgeModelViewModalProps> {
         open={this.props.model !== undefined}
         onCancel={() => this.props.onClose()}
         onOk={() => this.props.onClose()}
-        bodyStyle={{ height: "80vh" }}
-        width={1200}
+        bodyStyle={{ height: "750px" }}
+        width={1400}
+        footer={null}
+        destroyOnClose
       >
-        <div
-          className="Viewer"
-          id="forgeViewer"
-          style={{
-            width: "100%",
-            height: "100%",
-            margin: "0",
-            backgroundColor: "#f0f8ff",
-          }}
-        />
+        <div className="Viewer" id="forgeViewer" />
       </Modal>
     );
   }
