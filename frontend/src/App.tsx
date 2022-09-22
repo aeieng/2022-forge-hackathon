@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Col, Layout, Row } from "antd";
+import { Button, Col, Layout, Row, Space } from "antd";
 
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -16,12 +16,15 @@ const App = () => {
     <Layout style={{ height: "100%" }}>
       <Header>
         <Row gutter={16}>
-          <Col>
+          <Col span={16}>
             <Nav />
           </Col>
           <Col flex="auto" />
           <Col>
-            <User />
+            <Space>
+              <Button>Add Building</Button>
+              <User />
+            </Space>
           </Col>
         </Row>
       </Header>
@@ -35,7 +38,7 @@ const App = () => {
           </Route>
         </Routes>
       </Content>
-      <Footer style={{ textAlign: "center" }}>AEI 2022</Footer>
+      <Footer style={{ textAlign: "center" }}>2022 Affiliated Engineers, Inc.</Footer>
     </Layout>
   );
 };
