@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Tree, TreeDataNode } from "antd";
 import { Model } from "./ModelTable";
 import AddModelModal from "./AddModelModal";
-import { ModelContext } from "../pages/Admin";
+import { ModelContext } from "../context/ModelContext";
 
 const AUTODESK_API = "https://developer.api.autodesk.com";
 

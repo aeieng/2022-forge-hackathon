@@ -14,7 +14,7 @@ const { Header, Footer, Content } = Layout;
 const App = () => {
   return (
     <Layout style={{ height: "100%" }}>
-      <Header>
+      <Header style={{ backgroundColor: "white" }}>
         <Row gutter={16}>
           <Col>
             <Nav />

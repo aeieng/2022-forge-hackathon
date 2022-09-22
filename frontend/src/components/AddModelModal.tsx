@@ -1,6 +1,6 @@
 import { Col, Modal, Row, Select, Spin } from "antd";
 import { useContext, useEffect, useState } from "react";
-import { ModelContext } from "../pages/Admin";
+import { ModelContext } from "../context/ModelContext";
 import { Building, Model } from "./ModelTable";
 
 const AddModelModal = () => {
@@ -22,7 +22,6 @@ const AddModelModal = () => {
       modelToAdd.building?.id
     ) {
       // POST add-model.
-
       fetch("https://localhost:5001/token")
         .then((response) => {
           if (response.ok) {

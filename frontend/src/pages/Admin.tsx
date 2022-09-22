@@ -1,33 +1,16 @@
-import { createContext, Dispatch, SetStateAction, useState } from "react";
 import { Button, Col, Row } from "antd";
+import ActivitiesTable from "../components/ActivitiesTable";
+import ExtractionLog from "../components/ExtractionLog";
 import HubTree from "../components/HubTree";
-import ModelTable, { Model } from "../components/ModelTable";
-
-type IModelContext = {
-  models: Model[];
-  setModels: Dispatch<SetStateAction<Model[]>>;
-  modelToAdd: Model | undefined;
-  setModelToAdd: Dispatch<SetStateAction<Model | undefined>>;
-};
-
-export const ModelContext = createContext<IModelContext>({
-  models: [],
-  setModels: () => {},
-  modelToAdd: undefined,
-  setModelToAdd: () => {},
-});
+import ModelTable from "../components/ModelTable";
+import { ModelContextProvider } from "../context/ModelContext";
 
 const Admin = () => {
-  const [models, setModels] = useState<Model[]>([]);
-  const [modelToAdd, setModelToAdd] = useState<Model>();
-
   return (
-    <ModelContext.Provider
-      value={{ models, setModels, modelToAdd, setModelToAdd }}
-    >
+    <ModelContextProvider>
       <Row gutter={16}>
-        <Col span={16} />
-        <Col span={8}>
+        <Col span={14} />
+        <Col span={10}>
           <Button
             onClick={() => {
               alert("todo");
@@ -43,20 +26,24 @@ const Admin = () => {
         </Col>
         <Col span={10}>
           <Row>
-            <Col>
+            <Col flex="auto">
               <h2>Models</h2>
               <ModelTable />
             </Col>
           </Row>
           <Row>
-            <h2>Activities</h2>
+            <Col flex="auto">
+              <h2>Activities</h2>
+              <ActivitiesTable />
+            </Col>
           </Row>
         </Col>
         <Col span={10}>
           <h2>Extraction Log</h2>
+          <ExtractionLog />
         </Col>
       </Row>
-    </ModelContext.Provider>
+    </ModelContextProvider>
   );
 };
 

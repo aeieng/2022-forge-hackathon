@@ -1,6 +1,7 @@
-import { useContext } from "react";
-import { Button, Table, TableColumnsType } from "antd";
-import { ModelContext } from "../pages/Admin";
+import { useContext, useState } from "react";
+import { Table, TableColumnsType } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
+import { ModelContext } from "../context/ModelContext";
 
 export type Building = {
   id: string;
@@ -18,7 +19,8 @@ export type Model = {
 };
 
 const ModelTable = () => {
-  const { models, setModelToAdd } = useContext(ModelContext);
+  const { models, setModels } = useContext(ModelContext);
+  const [loading, setLoading] = useState(false);
 
   const COLUMNS: TableColumnsType<Model> = [
     {
@@ -47,19 +49,66 @@ const ModelTable = () => {
       key: "actions",
       align: "center",
       render: (_, record) => (
-        <Button
+        // <Button
+        //   onClick={() => {
+        //     setModelToAdd(record);
+        //   }}
+        // >
+        //   Edit
+        // </Button>
+        <DeleteOutlined
+          alt="Delete Model"
           onClick={() => {
-            setModelToAdd(record);
+            setLoading(true);
+            fetch("https://localhost:5001/token")
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                }
+                throw response;
+              })
+              .then((token) => {
+                fetch(
+                  `https://localhost:5001/models/{id}/?modelId=${record.key}`,
+                  {
+                    method: "DELETE",
+                    headers: new Headers({
+                      Authorization: `Bearer ${token.accessToken}`,
+                    }),
+                  }
+                )
+                  .then((response) => {
+                    if (response.ok) {
+                      setModels((prev) => [
+                        ...prev.filter((m) => m.key !== record.key),
+                      ]);
+                      return response.json();
+                    }
+                    throw response;
+                  })
+                  .then((data) => {
+                    console.log(data);
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                    alert("Error deleting.");
+                  });
+              })
+              .catch((error) => {
+                console.error(error);
+              })
+              .finally(() => {
+                setLoading(false);
+              });
           }}
-        >
-          Edit
-        </Button>
+        />
       ),
     },
   ];
 
   return (
     <Table
+      loading={loading}
       dataSource={models}
       columns={COLUMNS}
       pagination={false}
