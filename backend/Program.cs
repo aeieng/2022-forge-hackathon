@@ -209,7 +209,7 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
 
     var inputParams = new XrefTreeArgument
     {
-        Url = $"data:application/json, {{ \"Operation\" : \"{operation}\""
+        Url = $"data:application/json,{{ \"Operation\": \"{operation}\" }}"
     };
 
     var workItemSpec = new WorkItem()
@@ -250,7 +250,7 @@ app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, B
     using var httpClient = new HttpClient();
     using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
     httpResponse.EnsureSuccessStatusCode();
-    var resultJson = httpResponse.Content.ReadAsStringAsync();
+    var resultJson = await httpResponse.Content.ReadAsStringAsync();
 
     // switch extractionLog.Operation
 
