@@ -12,7 +12,7 @@ type Hub = {
 };
 
 const hiddenFolderFilterCallback = (o: Hub) => {
-  const notIncludedFolders = ["submittal", "checklist", "dailylog", "issue"];
+  const notIncludedFolders = ["submittal", "checklist", "dailylog", "issue", "meetings"];
   return (
     !o.attributes.hidden &&
     !o.attributes.name?.startsWith(

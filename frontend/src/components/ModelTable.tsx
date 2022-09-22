@@ -28,11 +28,6 @@ const ModelTable = () => {
       key: "buildingName",
     },
     {
-      title: "Revit Version",
-      dataIndex: "revitVersion",
-      key: "revitVersion",
-    },
-    {
       title: "Actions",
       dataIndex: "actions",
       key: "actions",
