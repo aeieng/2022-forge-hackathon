@@ -6,13 +6,15 @@ import Admin from "./pages/Admin";
 import Inputs from "./pages/Inputs";
 import Dashboard from "./pages/Dashboard";
 import Nav from "./components/Nav";
-import "./App.css";
 import User from "./components/User";
+import { AppContextProvider } from "./context/AppContext";
+import "./App.css";
 
 const { Header, Footer, Content } = Layout;
 
 const App = () => {
   return (
+  <AppContextProvider>
     <Layout style={{ height: "100%" }}>
       <Header>
         <Row gutter={16}>
@@ -28,7 +30,7 @@ const App = () => {
           </Col>
         </Row>
       </Header>
-      <Content style={{ height: "100%", padding: "2rem" }}>
+      <Content style={{ height: "100%", padding: "2rem", overflowY: "scroll" }}>
         <Routes>
           <Route path="/">
             <Route index element={<Login />} />
@@ -40,6 +42,7 @@ const App = () => {
       </Content>
       <Footer style={{ textAlign: "center" }}>2022 Affiliated Engineers, Inc.</Footer>
     </Layout>
+  </AppContextProvider>
   );
 };
 
