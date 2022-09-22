@@ -16,6 +16,8 @@ public class Model
     public string AutodeskProjectId { get; set; }
     public Guid BuildingId { get; set; }
 
+    public virtual List<Room> Rooms { get; set; }
+
     public Model() { }
 
     public Model(ModelInput input)

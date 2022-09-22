@@ -269,6 +269,8 @@ app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, B
     }
     catch (Exception e)
     {
+        extractionLog.Status = "Failed";
+        await db.SaveChangesAsync();
         return Results.Problem($"Exception occurred: {e}");
     }
 
@@ -290,8 +292,13 @@ app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, B
             break;
 
         default:
+            extractionLog.Status = "Failed";
+            await db.SaveChangesAsync();
             return Results.Problem($"Invalid operation: {extractionLog.Operation}");
     }
+
+    extractionLog.Status = "Success";
+    await db.SaveChangesAsync();
 
     return Results.Ok();
 });
