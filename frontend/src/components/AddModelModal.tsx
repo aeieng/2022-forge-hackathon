@@ -1,9 +1,12 @@
 import { Col, Modal, Row, Select, Spin } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../context/AppContext";
-import { ModelContext } from "../context/ModelContext";
-import { ModelResponse } from "../query/Model";
-import { Building, Model, ModelQuery } from "./ModelTable";
+import {
+  Building,
+  Model,
+  ModelContext,
+  ModelQuery,
+} from "../context/ModelContext";
 
 const AddModelModal = () => {
   const { token } = useContext(AppContext);

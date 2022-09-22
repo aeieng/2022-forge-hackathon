@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { Tree, TreeDataNode } from "antd";
-import { Model } from "./ModelTable";
 import AddModelModal from "./AddModelModal";
 import { ModelContext } from "../context/ModelContext";
 import { AppContext } from "../context/AppContext";

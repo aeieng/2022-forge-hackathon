@@ -1,4 +1,4 @@
-import { Button, Col, Row } from "antd";
+import { Col, Row } from "antd";
 import ActivitiesTable from "../components/ActivitiesTable";
 import ExtractionLog from "../components/ExtractionLog";
 import HubTree from "../components/HubTree";
@@ -9,19 +9,8 @@ const Admin = () => {
   return (
     <ModelContextProvider>
       <Row gutter={16}>
-        <Col span={14} />
-        <Col span={10}>
-          <Button
-            onClick={() => {
-              alert("todo");
-            }}
-          >
-            RUN
-          </Button>
-        </Col>
-      </Row>
-      <Row gutter={16}>
         <Col span={4}>
+          <h2>Hub Tree</h2>
           <HubTree />
         </Col>
         <Col span={10}>

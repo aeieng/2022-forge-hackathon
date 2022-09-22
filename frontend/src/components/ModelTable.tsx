@@ -1,41 +1,8 @@
 import { useContext, useState } from "react";
 import { Table, TableColumnsType } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import { ModelContext } from "../context/ModelContext";
+import { Model, ModelContext } from "../context/ModelContext";
 import { AppContext } from "../context/AppContext";
-
-export type Building = {
-  id: string;
-  name: string;
-};
-
-// export type Model = {
-//   key: string;
-//   title: string;
-//   discipline: string;
-//   building: Building;
-//   autodeskItemId: string;
-//   autodeskProjectId: string;
-//   autodeskHubId: string;
-// };
-
-export type ModelQuery = {
-  autodeskHubId: string;
-  autodeskItemId: string;
-  autodeskProjectId: string;
-  buildingId: string;
-  name: string;
-  revitVersion: string;
-  type: string;
-};
-
-export type ModelResponse = {
-  id: string;
-} & ModelQuery;
-
-export type Model = {
-  buildingName?: string;
-} & ModelResponse;
 
 const ModelTable = () => {
   const { token } = useContext(AppContext);

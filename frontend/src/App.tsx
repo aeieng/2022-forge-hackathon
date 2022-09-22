@@ -27,7 +27,13 @@ const App = () => {
             </Col>
           </Row>
         </Header>
-        <Content style={{ height: "100%", padding: "2rem" }}>
+        <Content
+          style={{
+            height: "100%",
+            padding: "2rem",
+            overflowY: "scroll",
+          }}
+        >
           <Routes>
             <Route path="/">
               <Route index element={<Login />} />

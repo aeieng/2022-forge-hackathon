@@ -7,9 +7,30 @@ import {
   useEffect,
   useContext,
 } from "react";
-import { Model } from "../components/ModelTable";
-import { ModelResponse } from "../query/Model";
 import { AppContext } from "./AppContext";
+
+export type Building = {
+  id: string;
+  name: string;
+};
+
+export type ModelQuery = {
+  autodeskHubId: string;
+  autodeskItemId: string;
+  autodeskProjectId: string;
+  buildingId: string;
+  name: string;
+  revitVersion: string;
+  type: string;
+};
+
+export type ModelResponse = {
+  id: string;
+} & ModelQuery;
+
+export type Model = {
+  buildingName?: string;
+} & ModelResponse;
 
 type Context = {
   models: Model[];
