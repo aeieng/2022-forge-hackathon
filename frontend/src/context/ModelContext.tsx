@@ -14,7 +14,7 @@ export type Building = {
   name: string;
 };
 
-export type ModelQuery = {
+type ModelBase = {
   autodeskHubId: string;
   autodeskItemId: string;
   autodeskProjectId: string;
@@ -22,11 +22,14 @@ export type ModelQuery = {
   name: string;
   revitVersion: string;
   type: string;
+  derivativeId: string;
 };
+
+export type ModelMutation = ModelBase;
 
 export type ModelResponse = {
   id: string;
-} & ModelQuery;
+} & ModelBase;
 
 export type Model = {
   buildingName?: string;
@@ -37,6 +40,8 @@ type Context = {
   setModels: Dispatch<SetStateAction<Model[]>>;
   modelToAdd: Model | undefined;
   setModelToAdd: Dispatch<SetStateAction<Model | undefined>>;
+  derivatives: Map<string, string>;
+  setDerivatives: Dispatch<SetStateAction<Map<string, string>>>;
 };
 
 export const ModelContext = createContext<Context>({
@@ -44,12 +49,17 @@ export const ModelContext = createContext<Context>({
   setModels: () => {},
   modelToAdd: undefined,
   setModelToAdd: () => {},
+  derivatives: new Map(),
+  setDerivatives: () => {},
 });
 
 export const ModelContextProvider = ({ children }: PropsWithChildren) => {
   const { token } = useContext(AppContext);
   const [models, setModels] = useState<Model[]>([]);
   const [modelToAdd, setModelToAdd] = useState<Model>();
+  const [derivatives, setDerivatives] = useState<Map<string, string>>(
+    new Map()
+  );
 
   useEffect(() => {
     fetch("https://localhost:5001/models", {
@@ -66,20 +76,22 @@ export const ModelContextProvider = ({ children }: PropsWithChildren) => {
         throw response;
       })
       .then((data: ModelResponse[]) => {
-        setModels((prev) =>
-          data.map((model: ModelResponse) => {
-            const m: Model = {
+        setModels(
+          data.map(
+            (model: ModelResponse): Model => ({
               id: model.id,
               name: model.name,
               buildingId: model.buildingId,
+              // Building name not provided, using id for now.
+              buildingName: model.buildingId,
               type: model.type,
               autodeskItemId: model.autodeskItemId,
               autodeskProjectId: model.autodeskProjectId,
               autodeskHubId: model.autodeskHubId,
               revitVersion: "",
-            };
-            return m;
-          })
+              derivativeId: model.derivativeId,
+            })
+          )
         );
       })
       .catch((error) => {
@@ -89,7 +101,14 @@ export const ModelContextProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <ModelContext.Provider
-      value={{ models, setModels, modelToAdd, setModelToAdd }}
+      value={{
+        models,
+        setModels,
+        modelToAdd,
+        setModelToAdd,
+        derivatives,
+        setDerivatives,
+      }}
     >
       {children}
     </ModelContext.Provider>

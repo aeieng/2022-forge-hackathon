@@ -5,7 +5,7 @@ import {
   Building,
   Model,
   ModelContext,
-  ModelQuery,
+  ModelMutation,
 } from "../context/ModelContext";
 
 const AddModelModal = () => {
@@ -23,7 +23,7 @@ const AddModelModal = () => {
 
   const addModel = () => {
     if (modelToAdd !== undefined && modelToAdd.type && modelToAdd.buildingId) {
-      const payload: ModelQuery = {
+      const payload: ModelMutation = {
         autodeskItemId: modelToAdd.autodeskItemId,
         autodeskProjectId: modelToAdd.autodeskProjectId,
         autodeskHubId: modelToAdd.autodeskHubId,
@@ -31,6 +31,7 @@ const AddModelModal = () => {
         name: modelToAdd.name,
         type: modelToAdd.type,
         revitVersion: "",
+        derivativeId: modelToAdd.derivativeId ?? "",
       };
       // POST add-model.
       fetch("https://localhost:5001/add-model", {

@@ -45,7 +45,7 @@ const updateTreeData = (
 
 const HubTree = () => {
   const { token } = useContext(AppContext);
-  const { setModelToAdd } = useContext(ModelContext);
+  const { setModelToAdd, derivatives } = useContext(ModelContext);
   const [treeData, setTreeData] = useState<TreeDataNode[]>();
   const [loading, setLoading] = useState(false);
 
@@ -132,11 +132,19 @@ const HubTree = () => {
               updateTreeData(
                 prev ?? [],
                 key,
-                data.data.map((o: Hub) => ({
-                  title: o.attributes.displayName,
-                  key: `${key}/${o.id}`,
-                  isLeaf: true,
-                }))
+                data.data.map((o: Hub) => {
+                  data.included?.forEach((p: any) => {
+                    derivatives.set(
+                      p.attributes.displayName,
+                      p.relationships.derivatives.data.id
+                    );
+                  });
+                  return {
+                    title: o.attributes.displayName,
+                    key: `${key}/${o.id}`,
+                    isLeaf: true,
+                  };
+                })
               )
             );
             resolve();
@@ -155,16 +163,18 @@ const HubTree = () => {
           const [autodeskHubId, autodeskProjectId, autodeskItemId, modelId] = (
             info.node.key as string
           ).split("/");
+          const name = (info.node.title as string) ?? "none";
 
           setModelToAdd({
             id: modelId,
-            name: (info.node.title as string) ?? "none",
+            name,
             autodeskItemId,
             autodeskProjectId,
             autodeskHubId,
             revitVersion: "",
             buildingId: "",
             type: "",
+            derivativeId: derivatives.get(name) ?? "",
           });
         }}
       />

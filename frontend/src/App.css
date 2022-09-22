@@ -1,7 +1,14 @@
-@import 'antd/dist/antd.css';
+@import "antd/dist/antd.css";
 
 #root {
   width: 100vw;
   height: 100vh;
   margin: 0 auto;
+}
+
+#forgeViewer {
+  width: 1300px;
+  height: 700px;
+  margin: 0;
+  background-color: #f0f8ff;
 }
