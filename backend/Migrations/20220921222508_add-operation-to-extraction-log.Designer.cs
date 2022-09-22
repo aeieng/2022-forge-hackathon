@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendDbContext))]
-    partial class BackendDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220921222508_add-operation-to-extraction-log")]
+    partial class addoperationtoextractionlog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -293,8 +295,6 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BuildingId");
-
                     b.ToTable("Models");
                 });
 
@@ -302,9 +302,6 @@ namespace Backend.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
-
-                    b.Property<int>("ElementId")
-                        .HasColumnType("integer");
 
                     b.Property<double>("ExteriorWallArea")
                         .HasColumnType("double precision");
@@ -315,8 +312,9 @@ namespace Backend.Migrations
                     b.Property<double>("FloorArea")
                         .HasColumnType("double precision");
 
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -327,8 +325,6 @@ namespace Backend.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ModelId");
 
                     b.ToTable("Rooms");
                 });
@@ -375,67 +371,6 @@ namespace Backend.Migrations
                     b.HasKey("ActivityId");
 
                     b.ToTable("SelectedActivities");
-                });
-
-            modelBuilder.Entity("Backend.Entities.Model", b =>
-                {
-                    b.HasOne("Backend.Entities.Building", "Building")
-                        .WithMany()
-                        .HasForeignKey("BuildingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("Backend.Entities.ModelData", "ModelData", b1 =>
-                        {
-                            b1.Property<Guid>("ModelId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<double>("DuctSurfaceArea")
-                                .HasColumnType("double precision");
-
-                            b1.Property<double>("ExteriorWallArea")
-                                .HasColumnType("double precision");
-
-                            b1.Property<double>("GlazingArea")
-                                .HasColumnType("double precision");
-
-                            b1.Property<int>("NumberOfCircuits")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("NumberOfLightingFixtures")
-                                .HasColumnType("integer");
-
-                            b1.Property<double>("TotalPipeLength")
-                                .HasColumnType("double precision");
-
-                            b1.HasKey("ModelId");
-
-                            b1.ToTable("Models");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ModelId");
-                        });
-
-                    b.Navigation("Building");
-
-                    b.Navigation("ModelData")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Backend.Entities.Room", b =>
-                {
-                    b.HasOne("Backend.Entities.Model", "Model")
-                        .WithMany("Rooms")
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("Backend.Entities.Model", b =>
-                {
-                    b.Navigation("Rooms");
                 });
 #pragma warning restore 612, 618
         }

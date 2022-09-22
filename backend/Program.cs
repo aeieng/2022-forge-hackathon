@@ -1,16 +1,23 @@
-using Microsoft.EntityFrameworkCore;
-using Backend.Entities;
+using System.Text.Json;
 using Autodesk.Forge;
-using Microsoft.AspNetCore.Http.Json;
-using System.Text.Json.Serialization;
-using Autodesk.Forge.DesignAutomation.Model;
-using System.Net;
-using Autodesk.Forge.Model;
-using System;
 using Autodesk.Forge.Core;
 using Autodesk.Forge.DesignAutomation;
+using Autodesk.Forge.DesignAutomation.Model;
+using Autodesk.Forge.Model;
+using Backend.Entities;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+using AEIRevitDesignAutomation.Models;
 
 #region Configs
+
+const string hostUrl = "https://f632-67-161-93-69.ngrok.io";
+
+const string Architectural = "Architectural";
+const string Electrical = "Electrical";
+const string Mechanical = "Mechanical";
+string[] Operations = { Architectural, Electrical, Mechanical };
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -44,7 +51,6 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => "Welcome to Team HackOverflow API for 2022 Forge Hackathon");
 
 #region Auth Endpoints
-
 app.MapGet("/token", async () =>
 {
     var token = await new TwoLeggedApi().AuthenticateAsync(
@@ -54,12 +60,11 @@ app.MapGet("/token", async () =>
 
     return new Token(token.access_token, DateTime.UtcNow.AddSeconds(token.expires_in));
 });
-
 #endregion
 
 #region Model Endpoints
-
 app.MapGet("/models", async (BackendDbContext db) => await db.Models.ToListAsync());
+
 app.MapPost("/add-model", async (ModelInput input, BackendDbContext db) =>
 {
     var model = new Model(input);
@@ -69,7 +74,8 @@ app.MapPost("/add-model", async (ModelInput input, BackendDbContext db) =>
     
     return Results.Created($"/models/{model.Id}", model);
 });
-app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
+
+app.MapDelete("/models/{modelId}", async (Guid modelId, BackendDbContext db) =>
 {
     if (await db.Models.FindAsync(modelId) is not { } model) return Results.NotFound();
 
@@ -78,11 +84,9 @@ app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
     
     return Results.Ok(model);
 });
-
 #endregion
 
 #region Activity Endpoints
-
 app.MapGet("/activity-types", () =>
 {
     Dictionary<string, object> activityTypes = new Dictionary<string, object>();
@@ -97,8 +101,11 @@ app.MapGet("/activity-types", () =>
 
     return activityTypes;
 });
+
 app.MapGet("/activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
+
 app.MapGet("/selected-activities", async (BackendDbContext db) => await db.SelectedActivities.ToListAsync());
+
 app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, BackendDbContext db) =>
 {
     foreach (var selectedActivityId in selectedActivitiesIds)
@@ -111,7 +118,8 @@ app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, Bac
 
     return Results.Ok();
 });
-app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbContext db) =>
+
+app.MapDelete("/selected-activities/{activityId}", async (Guid activityId, BackendDbContext db) =>
 {
     if (await db.SelectedActivities.FindAsync(activityId) is not { } selectedActivity) return Results.NotFound();
 
@@ -126,8 +134,10 @@ app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbCont
 
 app.MapGet("/extraction-log", async (BackendDbContext db) => await db.ExtractionLog.ToListAsync());
 
-app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =>
+app.MapPost("/run", async (string operation, Guid modelId, BackendDbContext db) =>
 {
+    if (!Operations.Contains(operation)) return Results.BadRequest();
+
     var auth = await new TwoLeggedApi().AuthenticateAsync(
         configuration["Forge:ClientId"],
         configuration["Forge:ClientSecret"],
@@ -195,20 +205,22 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     { }
 
     ObjectsApi objects = new ObjectsApi();
-    dynamic signedUrl = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, "resultFilename", new PostBucketsSigned(5), "readwrite");
+    dynamic signedUrlResponse = await objects.CreateSignedResourceAsyncWithHttpInfo(bucketName, "result.json", new PostBucketsSigned(60), "readwrite");
+    var signedUrl = (string)signedUrlResponse.Data.signedUrl;
 
     var uploadUrl = new XrefTreeArgument
     {
-        Url = (string)signedUrl.Data.signedUrl,
+        Url = signedUrl,
         Verb = Verb.Put
     };
 
+    var extractionLogId = Guid.NewGuid();
     // TODO: change to exposed callback URL
-    string callbackUrl = "https://localhost:5000/api";//string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
+    string callbackUrl = $"{hostUrl}/process-results/{extractionLogId}"; //string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
 
     var inputParams = new XrefTreeArgument
     {
-        Url = $"data:application/json, {{ \"Operation\" : \"{operation}\""
+        Url = $"data:application/json,{{ \"Operation\": \"{operation}\" }}"
     };
 
     var workItemSpec = new WorkItem()
@@ -227,15 +239,94 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     
     var extractionLog = new ExtractionLog
     {
-        Id = Guid.NewGuid(),
+        Id = extractionLogId,
         StartedRunAtUtc = DateTime.UtcNow,
         ModelId = modelId,
+        Operation = operation,
+        ResultSignedUrl = signedUrl,
         Status = workItemStatus.Status == Status.Inprogress ? Status.Inprogress.ToString() : "Started",
         DesignAutomationWorkItemId = workItemStatus.Id
     };
     
     await db.ExtractionLog.AddAsync(extractionLog);
     await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, BackendDbContext db) =>
+{
+    var extractionLog = db.ExtractionLog.FirstOrDefault(o => o.Id == extractionLogId);
+    if (extractionLog == default) return Results.NotFound("No extraction log found");
+
+    var model = db.Models.FirstOrDefault(o => o.Id == extractionLog.ModelId);
+    if (model == default)
+    {
+        extractionLog.Status = "Failed";
+        await db.SaveChangesAsync();
+        return Results.NotFound("No model found");
+    }
+
+    string resultJson;
+    try
+    {
+        using var httpClient = new HttpClient();
+        using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
+        httpResponse.EnsureSuccessStatusCode();
+        resultJson = await httpResponse.Content.ReadAsStringAsync();
+    }
+    catch (Exception e)
+    {
+        extractionLog.Status = "Failed";
+        await db.SaveChangesAsync();
+        return Results.Problem($"Exception occurred: {e}");
+    }
+
+
+    switch (extractionLog.Operation)
+    {
+        case Architectural:
+            var aResponse = JsonSerializer.Deserialize<ArchitecturalResponse>(resultJson);
+            model.ModelData.ExteriorWallArea = aResponse.ExteriorWallArea;
+            model.ModelData.GlazingArea = aResponse.GlazingArea;
+            if (model.Rooms?.Any() ?? false)
+            {
+                model.Rooms.Clear();
+                await db.SaveChangesAsync();
+            }
+            model.Rooms = aResponse.Rooms.Select(o => new Room
+            {
+                Id = Guid.NewGuid().ToString(),
+                ModelId = extractionLog.ModelId,
+                Name = o.Name,
+                Number = o.Number,
+                ElementId = o.ElementId,
+                FloorArea = o.Area
+            }).ToList();
+            break;
+
+        case Electrical:
+            var eResponse = JsonSerializer.Deserialize<ElectricalResponse>(resultJson);
+            model.ModelData.NumberOfCircuits = eResponse.NumberOfCircuits;
+            model.ModelData.NumberOfLightingFixtures = eResponse.NumberOfLightingFixtures;
+            break;
+
+        case Mechanical:
+            var mResponse = JsonSerializer.Deserialize<MechanicalResponse>(resultJson);
+            model.ModelData.DuctSurfaceArea = mResponse.DuctSurfaceArea;
+            model.ModelData.TotalPipeLength = mResponse.TotalPipeLength;
+            break;
+
+        default:
+            extractionLog.Status = "Failed";
+            await db.SaveChangesAsync();
+            return Results.Problem($"Invalid operation: {extractionLog.Operation}");
+    }
+
+    extractionLog.Status = "Success";
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
 });
 
 #endregion
