@@ -21,7 +21,7 @@ namespace AEIRevitDesignAutomation.Operations
                 .OfCategory(BuiltInCategory.OST_ElectricalCircuit)
                 .ToElements();
 
-            var numberOfCircuits = circuits.Count();
+            var numberOfCircuits = circuits.Count;
 
             var numberOfLightingFixtures = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()

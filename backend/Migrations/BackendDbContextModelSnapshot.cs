@@ -52,13 +52,19 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double>("FloorArea")
+                    b.Property<double?>("EquipmentCoolingLoad")
                         .HasColumnType("double precision");
 
-                    b.Property<double>("Height")
+                    b.Property<double?>("FloorArea")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Height")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("LightingCoolingLoad")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Longitude")
@@ -68,8 +74,11 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("NumberOfFloors")
+                    b.Property<int?>("NumberOfFloors")
                         .HasColumnType("integer");
+
+                    b.Property<double?>("PeopleCoolingLoad")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("PrimaryBuildingType")
                         .HasColumnType("text");
@@ -164,17 +173,24 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double?>("Area")
-                        .HasColumnType("double precision");
-
                     b.Property<Guid>("BuildingId")
                         .HasColumnType("uuid");
+
+                    b.Property<double>("EquipmentDensity")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("LightingDensity")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("PeopleDensity")
+                        .HasColumnType("double precision");
 
                     b.Property<double>("Percentage")
                         .HasColumnType("double precision");
 
-                    b.Property<Guid>("RoomTypeId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("RoomTypeName")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -195,6 +211,14 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("ModelId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResultSignedUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("StartedRunAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -285,6 +309,8 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BuildingId");
+
                     b.ToTable("Models");
                 });
 
@@ -293,18 +319,21 @@ namespace Backend.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<int>("ElementId")
+                        .HasColumnType("integer");
+
                     b.Property<double>("ExteriorWallArea")
                         .HasColumnType("double precision");
 
-                    b.Property<double>("ExteriorWindowArea")
-                        .HasColumnType("double precision");
+                    b.Property<string>("BuildingId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<double>("FloorArea")
                         .HasColumnType("double precision");
 
-                    b.Property<string>("ModelId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -316,40 +345,9 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ModelId");
+
                     b.ToTable("Rooms");
-                });
-
-            modelBuilder.Entity("Backend.Entities.RoomType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<double>("EquipmentPowerDensity")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("LightingPowerDensity")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<double>("PeopleDensity")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("PeopleLatentRate")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("PeopleSensibleRate")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("VentilationRate")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RoomTypes");
                 });
 
             modelBuilder.Entity("Backend.Entities.SelectedActivity", b =>
@@ -361,6 +359,67 @@ namespace Backend.Migrations
                     b.HasKey("ActivityId");
 
                     b.ToTable("SelectedActivities");
+                });
+
+            modelBuilder.Entity("Backend.Entities.Model", b =>
+                {
+                    b.HasOne("Backend.Entities.Building", "Building")
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Backend.Entities.ModelData", "ModelData", b1 =>
+                        {
+                            b1.Property<Guid>("ModelId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("DuctSurfaceArea")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("ExteriorWallArea")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("GlazingArea")
+                                .HasColumnType("double precision");
+
+                            b1.Property<int>("NumberOfCircuits")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("NumberOfLightingFixtures")
+                                .HasColumnType("integer");
+
+                            b1.Property<double>("TotalPipeLength")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("ModelId");
+
+                            b1.ToTable("Models");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ModelId");
+                        });
+
+                    b.Navigation("Building");
+
+                    b.Navigation("ModelData")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.Entities.Room", b =>
+                {
+                    b.HasOne("Backend.Entities.Model", "Model")
+                        .WithMany("Rooms")
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("Backend.Entities.Model", b =>
+                {
+                    b.Navigation("Rooms");
                 });
 #pragma warning restore 612, 618
         }

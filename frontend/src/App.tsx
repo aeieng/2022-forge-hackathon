@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Col, Layout, Row } from "antd";
+import { Button, Col, Layout, Row, Space } from "antd";
 
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -14,38 +14,35 @@ const { Header, Footer, Content } = Layout;
 
 const App = () => {
   return (
-    <AppContextProvider>
-      <Layout style={{ height: "100%" }}>
-        <Header style={{ backgroundColor: "white" }}>
-          <Row gutter={16}>
-            <Col>
-              <Nav />
-            </Col>
-            <Col flex="auto" />
-            <Col>
+  <AppContextProvider>
+    <Layout style={{ height: "100%" }}>
+      <Header>
+        <Row gutter={16}>
+          <Col span={16}>
+            <Nav />
+          </Col>
+          <Col flex="auto" />
+          <Col>
+            <Space>
+              <Button>Add Building</Button>
               <User />
-            </Col>
-          </Row>
-        </Header>
-        <Content
-          style={{
-            height: "100%",
-            padding: "2rem",
-            overflowY: "scroll",
-          }}
-        >
-          <Routes>
-            <Route path="/">
-              <Route index element={<Login />} />
-              <Route path="admin" element={<Admin />} />
-              <Route path="inputs" element={<Inputs />} />
-              <Route path="dashboard" element={<Dashboard />} />
-            </Route>
-          </Routes>
-        </Content>
-        <Footer style={{ textAlign: "center" }}>AEI 2022</Footer>
-      </Layout>
-    </AppContextProvider>
+            </Space>
+          </Col>
+        </Row>
+      </Header>
+      <Content style={{ height: "100%", padding: "2rem", overflowY: "scroll" }}>
+        <Routes>
+          <Route path="/">
+            <Route index element={<Login />} />
+            <Route path="admin" element={<Admin />} />
+            <Route path="inputs" element={<Inputs />} />
+            <Route path="dashboard" element={<Dashboard />} />
+          </Route>
+        </Routes>
+      </Content>
+      <Footer style={{ textAlign: "center" }}>2022 Affiliated Engineers, Inc.</Footer>
+    </Layout>
+  </AppContextProvider>
   );
 };
 

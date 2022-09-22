@@ -54,14 +54,14 @@ namespace AEIRevitDesignAutomation
 
                     default:
                         ErrorOperation($"Invalid operation specified: {operation}");
-                        e.Succeeded = false;
+                        e.Succeeded = true;
                         break;
                 }
             }
             catch (Exception exception)
             {
                 ErrorOperation($"Exception occurred: {exception}");
-                e.Succeeded = false;
+                e.Succeeded = true;
             }
         }
 
