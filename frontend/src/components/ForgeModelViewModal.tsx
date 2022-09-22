@@ -21,14 +21,14 @@ class ForgeModelViewModal extends Component<ForgeModelViewModalProps> {
         onCancel={() => this.props.onClose()}
         onOk={() => this.props.onClose()}
         bodyStyle={{ height: "80vh" }}
-        width={1000}
+        width={1200}
       >
         <div
           className="Viewer"
           id="forgeViewer"
           style={{
-            width: "50%",
-            height: "50%",
+            width: "100%",
+            height: "100%",
             margin: "0",
             backgroundColor: "#f0f8ff",
           }}
@@ -80,46 +80,19 @@ class ForgeModelViewModal extends Component<ForgeModelViewModalProps> {
       })
       .then((token) => {
         let that: any = this;
-        this.getURN(function (urn: string) {
-          var options = {
-            env: "AutodeskProduction",
-            accessToken: token.accessToken,
-          };
-          var documentId: string = "urn:" + urn;
-          Autodesk.Viewing.Initializer(options, function onInitialized() {
-            Autodesk.Viewing.Document.load(
-              documentId,
-              that.onDocumentLoadSuccess.bind(that),
-              that.onDocumentLoadError
-            );
-          });
+        var options = {
+          env: "AutodeskProduction",
+          accessToken: token.accessToken,
+        };
+        var documentId: string = "urn:" + this.props.model?.derivativeId;
+        Autodesk.Viewing.Initializer(options, function onInitialized() {
+          Autodesk.Viewing.Document.load(
+            documentId,
+            that.onDocumentLoadSuccess.bind(that),
+            that.onDocumentLoadError
+          );
         });
       });
-  }
-
-  getURN(onURNCallback: any) {
-    const mock =
-      "dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLjRjZmhzbkU3U0FLejRMWHVPWHlZeUE_dmVyc2lvbj0x";
-    onURNCallback(mock);
-    // fetch("https://localhost:5001/token")
-    //   .then((response) => {
-    //     if (response.ok) {
-    //       return response.json();
-    //     }
-    //     throw response;
-    //   })
-    //   .then((token) => {
-    //     fetch(`https://developer.api.autodesk.com/data/v1/projects/b.6f34ae9f-59a3-464a-9386-5b9a93a41484/items/urn:adsk.wipprod:dm.lineage:7KTEQgj0TMalEk_537SIpg`, {
-    //       method: "GET",
-    //       headers: new Headers({
-    //         Authorization: `Bearer ${token.accessToken}`,
-    //       }),
-    //     })
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       console.log(data)
-    //     })
-    //   });
   }
 
   async onDocumentLoadSuccess(doc: Autodesk.Viewing.Document) {

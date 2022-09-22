@@ -51,15 +51,12 @@ const ModelTable = () => {
             alt="Delete Model"
             onClick={() => {
               setLoading(true);
-              fetch(
-                `https://localhost:5001/models/{id}/?modelId=${record.id}`,
-                {
-                  method: "DELETE",
-                  headers: new Headers({
-                    Authorization: `Bearer ${token.accessToken}`,
-                  }),
-                }
-              )
+              fetch(`https://localhost:5001/models/${record.id}`, {
+                method: "DELETE",
+                headers: new Headers({
+                  Authorization: `Bearer ${token.accessToken}`,
+                }),
+              })
                 .then((response) => {
                   if (response.ok) {
                     setModels((prev) => [
