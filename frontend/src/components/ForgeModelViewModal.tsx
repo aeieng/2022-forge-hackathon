@@ -30,17 +30,22 @@ class ForgeModelViewModal extends Component<ForgeModelViewModalProps> {
     );
   }
 
+  public componentDidUpdate(
+    prevProps: Readonly<ForgeModelViewModalProps>
+  ): void {
+    if (prevProps.model === undefined && this.props.model !== undefined) {
+      this.onScriptLoaded();
+    }
+  }
+
   public componentDidMount() {
     if (!window.Autodesk) {
       this.loadCss(
         "https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
       );
-
       this.loadScript(
         "https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"
-      ).onload = () => {
-        this.onScriptLoaded();
-      };
+      );
     }
   }
 

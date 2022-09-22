@@ -90,12 +90,10 @@ const ModelTable = () => {
         size="small"
         rowKey="id"
       />
-      {viewModel !== undefined && (
-        <ForgeModelViewModal
-          model={viewModel}
-          onClose={() => setViewModel(undefined)}
-        />
-      )}
+      <ForgeModelViewModal
+        model={viewModel}
+        onClose={() => setViewModel(undefined)}
+      />
     </>
   );
 };
