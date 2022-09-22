@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Autodesk.Forge;
 using Autodesk.Forge.Core;
 using Autodesk.Forge.DesignAutomation;
@@ -7,8 +8,14 @@ using Backend.Entities;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using AEIRevitDesignAutomation.Models;
 
 #region Configs
+
+const string Architectural = "Architectural";
+const string Electrical = "Electrical";
+const string Mechanical = "Mechanical";
+string[] Operations = { Architectural, Electrical, Mechanical };
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -42,7 +49,6 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => "Welcome to Team HackOverflow API for 2022 Forge Hackathon");
 
 #region Auth Endpoints
-
 app.MapGet("/token", async () =>
 {
     var token = await new TwoLeggedApi().AuthenticateAsync(
@@ -52,12 +58,11 @@ app.MapGet("/token", async () =>
 
     return new Token(token.access_token, DateTime.UtcNow.AddSeconds(token.expires_in));
 });
-
 #endregion
 
 #region Model Endpoints
-
 app.MapGet("/models", async (BackendDbContext db) => await db.Models.ToListAsync());
+
 app.MapPost("/add-model", async (ModelInput input, BackendDbContext db) =>
 {
     var model = new Model(input);
@@ -67,7 +72,8 @@ app.MapPost("/add-model", async (ModelInput input, BackendDbContext db) =>
     
     return Results.Created($"/models/{model.Id}", model);
 });
-app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
+
+app.MapDelete("/models/{modelId}", async (Guid modelId, BackendDbContext db) =>
 {
     if (await db.Models.FindAsync(modelId) is not { } model) return Results.NotFound();
 
@@ -76,11 +82,9 @@ app.MapDelete("/models/{id}", async (Guid modelId, BackendDbContext db) =>
     
     return Results.Ok(model);
 });
-
 #endregion
 
 #region Activity Endpoints
-
 app.MapGet("/activity-types", () =>
 {
     Dictionary<string, object> activityTypes = new Dictionary<string, object>();
@@ -95,8 +99,11 @@ app.MapGet("/activity-types", () =>
 
     return activityTypes;
 });
+
 app.MapGet("/activities", async (BackendDbContext db) => await db.Activities.ToListAsync());
+
 app.MapGet("/selected-activities", async (BackendDbContext db) => await db.SelectedActivities.ToListAsync());
+
 app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, BackendDbContext db) =>
 {
     foreach (var selectedActivityId in selectedActivitiesIds)
@@ -109,7 +116,8 @@ app.MapPost("/selected-activities", async (List<Guid> selectedActivitiesIds, Bac
 
     return Results.Ok();
 });
-app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbContext db) =>
+
+app.MapDelete("/selected-activities/{activityId}", async (Guid activityId, BackendDbContext db) =>
 {
     if (await db.SelectedActivities.FindAsync(activityId) is not { } selectedActivity) return Results.NotFound();
 
@@ -124,8 +132,10 @@ app.MapDelete("/selected-activities/{id}", async (Guid activityId, BackendDbCont
 
 app.MapGet("/extraction-log", async (BackendDbContext db) => await db.ExtractionLog.ToListAsync());
 
-app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =>
+app.MapPost("/run", async (string operation, Guid modelId, BackendDbContext db) =>
 {
+    if (!Operations.Contains(operation)) return Results.BadRequest();
+
     var auth = await new TwoLeggedApi().AuthenticateAsync(
         configuration["Forge:ClientId"],
         configuration["Forge:ClientSecret"],
@@ -239,6 +249,8 @@ app.MapPost("/run", async (string operation,Guid modelId, BackendDbContext db) =
     
     await db.ExtractionLog.AddAsync(extractionLog);
     await db.SaveChangesAsync();
+
+    return Results.Ok();
 });
 
 app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, BackendDbContext db) =>
@@ -247,12 +259,39 @@ app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, B
 
     if (extractionLog == default) return Results.NotFound();
 
-    using var httpClient = new HttpClient();
-    using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
-    httpResponse.EnsureSuccessStatusCode();
-    var resultJson = await httpResponse.Content.ReadAsStringAsync();
+    string resultJson;
+    try
+    {
+        using var httpClient = new HttpClient();
+        using var httpResponse = await httpClient.GetAsync(extractionLog.ResultSignedUrl, HttpCompletionOption.ResponseHeadersRead);
+        httpResponse.EnsureSuccessStatusCode();
+        resultJson = await httpResponse.Content.ReadAsStringAsync();
+    }
+    catch (Exception e)
+    {
+        return Results.Problem($"Exception occurred: {e}");
+    }
 
-    // switch extractionLog.Operation
+    switch (extractionLog.Operation)
+    {
+        case Architectural:
+            var aResponse = JsonSerializer.Deserialize<ArchitecturalResponse>(resultJson);
+
+            break;
+
+        case Electrical:
+            var eResponse = JsonSerializer.Deserialize<ElectricalResponse>(resultJson);
+
+            break;
+
+        case Mechanical:
+            var mResponse = JsonSerializer.Deserialize<MechanicalResponse>(resultJson);
+
+            break;
+
+        default:
+            return Results.Problem($"Invalid operation: {extractionLog.Operation}");
+    }
 
     return Results.Ok();
 });
