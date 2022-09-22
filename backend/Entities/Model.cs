@@ -14,7 +14,11 @@ public class Model
     public string RevitVersion { get; set; }
     public string AutodeskHubId { get; set; }
     public string AutodeskProjectId { get; set; }
+    [ForeignKey("Building")]
     public Guid BuildingId { get; set; }
+    public ModelData ModelData { get; set; }
+    public virtual Building Building { get; set; }
+    public virtual List<Room> Rooms { get; set; }
 
     public Model() { }
 
