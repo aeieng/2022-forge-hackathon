@@ -10,6 +10,7 @@ public class Room
     public virtual Model Model { get; set; }
     public string Number { get; set; }
     public string Name { get; set; }
+    public int ElementId { get; set; }
     public double FloorArea { get; set; }
     public double ExteriorWallArea { get; set; }
     public double ExteriorWindowArea { get; set; }

@@ -12,6 +12,8 @@ using AEIRevitDesignAutomation.Models;
 
 #region Configs
 
+const string hostUrl = "https://f632-67-161-93-69.ngrok.io";
+
 const string Architectural = "Architectural";
 const string Electrical = "Electrical";
 const string Mechanical = "Mechanical";
@@ -214,7 +216,6 @@ app.MapPost("/run", async (string operation, Guid modelId, BackendDbContext db) 
 
     var extractionLogId = Guid.NewGuid();
     // TODO: change to exposed callback URL
-    string hostUrl = "https://a6ad-67-161-93-69.ngrok.io";
     string callbackUrl = $"{hostUrl}/process-results/{extractionLogId}"; //string.Format("{0}/api/forge/callback/designautomation/{1}/{2}/{3}/{4}", Credentials.GetAppSetting("FORGE_WEBHOOK_URL"), userId, hubId, projectId, versionId.Base64Encode());
 
     var inputParams = new XrefTreeArgument
@@ -256,8 +257,15 @@ app.MapPost("/run", async (string operation, Guid modelId, BackendDbContext db) 
 app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, BackendDbContext db) =>
 {
     var extractionLog = db.ExtractionLog.FirstOrDefault(o => o.Id == extractionLogId);
+    if (extractionLog == default) return Results.NotFound("No extraction log found");
 
-    if (extractionLog == default) return Results.NotFound();
+    var model = db.Models.FirstOrDefault(o => o.Id == extractionLog.ModelId);
+    if (model == default)
+    {
+        extractionLog.Status = "Failed";
+        await db.SaveChangesAsync();
+        return Results.NotFound("No model found");
+    }
 
     string resultJson;
     try
@@ -274,21 +282,39 @@ app.MapPost("/process-results/{extractionLogId}", async (Guid extractionLogId, B
         return Results.Problem($"Exception occurred: {e}");
     }
 
+
     switch (extractionLog.Operation)
     {
         case Architectural:
             var aResponse = JsonSerializer.Deserialize<ArchitecturalResponse>(resultJson);
-
+            model.ModelData.ExteriorWallArea = aResponse.ExteriorWallArea;
+            model.ModelData.GlazingArea = aResponse.GlazingArea;
+            if (model.Rooms?.Any() ?? false)
+            {
+                model.Rooms.Clear();
+                await db.SaveChangesAsync();
+            }
+            model.Rooms = aResponse.Rooms.Select(o => new Room
+            {
+                Id = Guid.NewGuid().ToString(),
+                ModelId = extractionLog.ModelId,
+                Name = o.Name,
+                Number = o.Number,
+                ElementId = o.ElementId,
+                FloorArea = o.Area
+            }).ToList();
             break;
 
         case Electrical:
             var eResponse = JsonSerializer.Deserialize<ElectricalResponse>(resultJson);
-
+            model.ModelData.NumberOfCircuits = eResponse.NumberOfCircuits;
+            model.ModelData.NumberOfLightingFixtures = eResponse.NumberOfLightingFixtures;
             break;
 
         case Mechanical:
             var mResponse = JsonSerializer.Deserialize<MechanicalResponse>(resultJson);
-
+            model.ModelData.DuctSurfaceArea = mResponse.DuctSurfaceArea;
+            model.ModelData.TotalPipeLength = mResponse.TotalPipeLength;
             break;
 
         default:
