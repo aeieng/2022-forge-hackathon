@@ -42,6 +42,8 @@ type Context = {
   setModelToAdd: Dispatch<SetStateAction<Model | undefined>>;
   derivatives: Map<string, string>;
   setDerivatives: Dispatch<SetStateAction<Map<string, string>>>;
+  run: string | undefined;
+  setRun: Dispatch<SetStateAction<string | undefined>>;
 };
 
 export const ModelContext = createContext<Context>({
@@ -51,6 +53,8 @@ export const ModelContext = createContext<Context>({
   setModelToAdd: () => {},
   derivatives: new Map(),
   setDerivatives: () => {},
+  run: undefined,
+  setRun: () => {},
 });
 
 export const ModelContextProvider = ({ children }: PropsWithChildren) => {
@@ -60,6 +64,7 @@ export const ModelContextProvider = ({ children }: PropsWithChildren) => {
   const [derivatives, setDerivatives] = useState<Map<string, string>>(
     new Map()
   );
+  const [run, setRun] = useState<string>();
 
   useEffect(() => {
     fetch("https://localhost:5001/models", {
@@ -108,6 +113,8 @@ export const ModelContextProvider = ({ children }: PropsWithChildren) => {
         setModelToAdd,
         derivatives,
         setDerivatives,
+        run,
+        setRun,
       }}
     >
       {children}
