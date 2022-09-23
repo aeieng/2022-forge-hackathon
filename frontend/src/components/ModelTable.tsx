@@ -1,13 +1,17 @@
 import { useContext, useState } from "react";
 import { Table, TableColumnsType } from "antd";
-import { DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  PlayCircleOutlined,
+} from "@ant-design/icons";
 import { Model, ModelContext } from "../context/ModelContext";
 import { AppContext } from "../context/AppContext";
 import ForgeModelViewModal from "./ForgeModelViewModal";
 
 const ModelTable = () => {
   const { token } = useContext(AppContext);
-  const { models, setModels } = useContext(ModelContext);
+  const { models, setModels, setRun } = useContext(ModelContext);
   const [viewModel, setViewModel] = useState<Model>();
   const [loading, setLoading] = useState(false);
 
@@ -44,6 +48,36 @@ const ModelTable = () => {
             alt="Forge Viewer"
             onClick={() => {
               setViewModel(record);
+            }}
+          />
+          <span style={{ padding: "0 2px" }} />
+          <PlayCircleOutlined
+            alt="Run"
+            onClick={() => {
+              setLoading(true);
+              fetch(
+                `https://localhost:5001/run?operation=${record.type}&modelId=${record.id}`,
+                {
+                  method: "POST",
+                  headers: new Headers({
+                    Authorization: `Bearer ${token.accessToken}`,
+                  }),
+                }
+              )
+                .then((response) => {
+                  setRun(record.id);
+                  if (response.ok) {
+                    return response;
+                  }
+                  throw response;
+                })
+                .catch((error) => {
+                  console.error(error);
+                  alert("Error with run request.");
+                })
+                .finally(() => {
+                  setLoading(false);
+                });
             }}
           />
           <span style={{ padding: "0 2px" }} />
